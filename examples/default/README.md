@@ -6,6 +6,7 @@ This deploys the module in its simplest form.
 ```hcl
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -59,13 +60,13 @@ resource "azurerm_resource_group" "this" {
 # with a data source.
 module "test" {
   source = "../../"
+
   # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
   # ...
   location            = azurerm_resource_group.this.location
   name                = "TODO" # TODO update with module.naming.<RESOURCE_TYPE>.name_unique
   resource_group_name = azurerm_resource_group.this.name
-
-  enable_telemetry = var.enable_telemetry # see variables.tf
+  enable_telemetry    = var.enable_telemetry # see variables.tf
 }
 ```
 
@@ -81,14 +82,6 @@ The following requirements are needed by this module:
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
 ## Resources
 

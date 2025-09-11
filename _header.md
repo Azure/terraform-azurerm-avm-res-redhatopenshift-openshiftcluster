@@ -23,5 +23,5 @@ Before deploying an ARO cluster, ensure you have:
 > [!IMPORTANT]
 > Azure Red Hat OpenShift clusters require significant compute and networking resources. Ensure your subscription has adequate quotas before deployment.
 
-> [!NOTE]  
+> [!NOTE]
 > This module deploys Azure Red Hat OpenShift v4.11+ which requires specific network and resource configurations. Review the Azure Red Hat OpenShift documentation for detailed prerequisites.

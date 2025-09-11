@@ -1,5 +1,98 @@
 {
+  // Editor and UI Performance
   "editor.bracketPairColorization.enabled": true,
   "editor.tabSize": 2,
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "editor.minimap.enabled": false,
+  "editor.wordWrap": "on",
+  "editor.semanticHighlighting.enabled": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggest.preview": true,
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  
+  // Performance optimizations
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/.terraform/**": true,
+    "**/*.tfstate*": true,
+    "**/terraform.tfstate.d/**": true
+  },
+  "search.exclude": {
+    "**/.terraform": true,
+    "**/*.tfstate": true,
+    "**/*.tfstate.backup": true,
+    "**/terraform.tfstate.d": true,
+    "**/.terraform.lock.hcl": true
+  },
+  "files.exclude": {
+    "**/.terraform": true,
+    "**/*.tfstate": true,
+    "**/*.tfstate.backup": true,
+    "**/terraform.tfstate.d": true
+  },
+  
+  // GitHub Copilot - Always allow tools without prompting
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": true,
+    "markdown": true,
+    "scminput": false
+  },
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.chat.followUps": "on",
+  "github.copilot.chat.localeOverride": "auto",
+  "github.copilot.chat.welcomeMessage": "never",
+  "github.copilot.advanced": {},
+  
+  // MCP/Tool settings - Auto-allow without prompting
+  "mcp.autoApprove": true,
+  "tools.autoApprove": true,
+  "copilot.tools.autoApprove": true,
+  "github.copilot.tools.autoApprove": true,
+  "chat.experimental.autoApproveTools": true,
+  
+  // Terraform specific settings
+  "terraform.languageServer.enable": true,
+  "terraform.experimentalFeatures.validateOnSave": true,
+  "terraform.experimentalFeatures.prefillRequiredFields": true,
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": false,
+    "editor.codeActionsOnSave": {
+      "source.formatDocument.terraform": "explicit"
+    }
+  },
+  "[terraform-vars]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.formatOnSave": true
+  },
+  
+  // Terminal settings for PowerShell
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "args": ["-NoLogo"]
+    }
+  },
+  
+  // Git settings
+  "git.autofetch": true,
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.enableCommitSigning": false,
+  
+  // Workspace trust
+  "security.workspace.trust.untrustedFiles": "open",
+  "security.workspace.trust.banner": "never",
+  "security.workspace.trust.startupPrompt": "never",
+  "security.workspace.trust.emptyWindow": false
 }

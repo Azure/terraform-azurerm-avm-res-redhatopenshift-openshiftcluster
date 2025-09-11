@@ -1,1 +1,2 @@
-404: Not Found
+@echo off
+.\avm.ps1 %1

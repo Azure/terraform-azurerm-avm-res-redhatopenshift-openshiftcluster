@@ -1,19 +1,27 @@
-# terraform-azurerm-avm-template
+# terraform-azurerm-avm-res-redhatopenshift-openshiftcluster
 
-This is a template repo for Terraform Azure Verified Modules.
+This is an Azure Verified Module for deploying Azure Red Hat OpenShift (ARO) clusters.
 
-Things to do:
+## Features
 
-1. Set up a GitHub repo environment called `test`.
-1. Configure environment protection rule to ensure that approval is required before deploying to this environment.
-1. Create a user-assigned managed identity in your test subscription.
-1. Create a role assignment for the managed identity on your test subscription, use the minimum required role.
-1. Configure federated identity credentials on the user assigned managed identity. Use the GitHub environment.
-1. Search and update TODOs within the code and remove the TODO comments once complete.
+- **Complete ARO cluster deployment** with all configuration options
+- **AVM compliance** with standard interfaces for role assignments, diagnostic settings, and resource locks
+- **Private networking support** via API server and ingress visibility controls
+- **Flexible node configuration** for both master and worker nodes
+- **Security best practices** with service principal authentication and encryption options
+- **Comprehensive validation** for network configuration and cluster parameters
+
+## Requirements
+
+Before deploying an ARO cluster, ensure you have:
+
+1. **Service Principal**: A service principal with appropriate permissions
+2. **Virtual Network**: Pre-configured virtual network with subnets for master and worker nodes
+3. **Red Hat Account**: Optional pull secret for accessing Red Hat container registries
+4. **Resource Quotas**: Sufficient Azure resource quotas for the cluster size
 
 > [!IMPORTANT]
-> As the overall AVM framework is not GA (generally available) yet - the CI framework and test automation is not fully functional and implemented across all supported languages yet - breaking changes are expected, and additional customer feedback is yet to be gathered and incorporated. Hence, modules **MUST NOT** be published at version `1.0.0` or higher at this time.
-> 
-> All module **MUST** be published as a pre-release version (e.g., `0.1.0`, `0.1.1`, `0.2.0`, etc.) until the AVM framework becomes GA.
-> 
-> However, it is important to note that this **DOES NOT** mean that the modules cannot be consumed and utilized. They **CAN** be leveraged in all types of environments (dev, test, prod etc.). Consumers can treat them just like any other IaC module and raise issues or feature requests against them as they learn from the usage of the module. Consumers should also read the release notes for each version, if considering updating to a more recent version of a module to see if there are any considerations or breaking changes etc.
+> Azure Red Hat OpenShift clusters require significant compute and networking resources. Ensure your subscription has adequate quotas before deployment.
+
+> [!NOTE]  
+> This module deploys Azure Red Hat OpenShift v4.11+ which requires specific network and resource configurations. Review the Azure Red Hat OpenShift documentation for detailed prerequisites.

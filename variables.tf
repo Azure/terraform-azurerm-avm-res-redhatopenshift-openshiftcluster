@@ -1,18 +1,129 @@
+# Azure Red Hat OpenShift specific variables
+variable "api_server_profile" {
+  type = object({
+    visibility = string
+  })
+  description = <<DESCRIPTION
+Configuration for the API server profile.
+
+- `visibility` - (Required) Visibility of the API server. Possible values are `Private` and `Public`.
+DESCRIPTION
+
+  validation {
+    condition     = contains(["Private", "Public"], var.api_server_profile.visibility)
+    error_message = "API server visibility must be either 'Private' or 'Public'."
+  }
+}
+
+variable "cluster_profile" {
+  type = object({
+    domain                      = string
+    version                     = string
+    fips_enabled                = optional(bool, false)
+    managed_resource_group_name = optional(string, null)
+    pull_secret                 = optional(string, null)
+  })
+  description = <<DESCRIPTION
+Configuration for the OpenShift cluster profile.
+
+- `domain` - (Required) Domain name for the OpenShift cluster.
+- `version` - (Required) Version of OpenShift to deploy.
+- `fips_enabled` - (Optional) Whether FIPS mode is enabled. Defaults to `false`.
+- `managed_resource_group_name` - (Optional) Name of the managed resource group. If not specified, one will be generated.
+- `pull_secret` - (Optional) Red Hat pull secret for accessing Red Hat container registries.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.cluster_profile.domain))
+    error_message = "Domain must be between 3 and 63 characters, contain only lowercase letters, numbers, and hyphens, and start and end with alphanumeric characters."
+  }
+  validation {
+    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.cluster_profile.version))
+    error_message = "Version must be in semantic version format (e.g., '4.11.0')."
+  }
+}
+
+variable "ingress_profile" {
+  type = object({
+    visibility = string
+  })
+  description = <<DESCRIPTION
+Configuration for the ingress profile.
+
+- `visibility` - (Required) Visibility of the ingress. Possible values are `Private` and `Public`.
+DESCRIPTION
+
+  validation {
+    condition     = contains(["Private", "Public"], var.ingress_profile.visibility)
+    error_message = "Ingress visibility must be either 'Private' or 'Public'."
+  }
+}
+
 variable "location" {
   type        = string
   description = "Azure region where the resource should be deployed."
   nullable    = false
 }
 
-variable "name" {
-  type        = string
-  description = "The name of the this resource."
+variable "main_profile" {
+  type = object({
+    subnet_id                  = string
+    vm_size                    = string
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+  description = <<DESCRIPTION
+Configuration for the master node profile.
+
+- `subnet_id` - (Required) The subnet ID for the master nodes.
+- `vm_size` - (Required) The VM size for the master nodes.
+- `disk_encryption_set_id` - (Optional) The disk encryption set ID for master node disks.
+- `encryption_at_host_enabled` - (Optional) Whether encryption at host is enabled for master nodes. Defaults to `false`.
+DESCRIPTION
 
   validation {
-    condition     = can(regex("TODO", var.name))
-    error_message = "The name must be TODO." # TODO remove the example below once complete:
-    #condition     = can(regex("^[a-z0-9]{5,50}$", var.name))
-    #error_message = "The name must be between 5 and 50 characters long and can only contain lowercase letters and numbers."
+    condition     = can(regex("^/subscriptions/[0-9a-f-]+/resourceGroups/[^/]+/providers/Microsoft.Network/virtualNetworks/[^/]+/subnets/[^/]+$", var.main_profile.subnet_id))
+    error_message = "Subnet ID must be a valid Azure subnet resource ID."
+  }
+}
+
+variable "name" {
+  type        = string
+  description = "The name of the Azure Red Hat OpenShift cluster."
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]$", var.name))
+    error_message = "The name must be between 3 and 63 characters long and can only contain letters, numbers, and hyphens. It must start and end with a letter or number."
+  }
+}
+
+variable "network_profile" {
+  type = object({
+    pod_cidr                                     = string
+    service_cidr                                 = string
+    outbound_type                                = optional(string, "Loadbalancer")
+    preconfigured_network_security_group_enabled = optional(bool, false)
+  })
+  description = <<DESCRIPTION
+Configuration for the cluster network profile.
+
+- `pod_cidr` - (Required) CIDR block for pod network.
+- `service_cidr` - (Required) CIDR block for service network.
+- `outbound_type` - (Optional) Outbound routing method. Possible values are `Loadbalancer` and `UserDefinedRouting`. Defaults to `Loadbalancer`.
+- `preconfigured_network_security_group_enabled` - (Optional) Whether to use preconfigured network security groups. Defaults to `false`.
+DESCRIPTION
+
+  validation {
+    condition     = can(cidrhost(var.network_profile.pod_cidr, 0))
+    error_message = "Pod CIDR must be a valid CIDR block."
+  }
+  validation {
+    condition     = can(cidrhost(var.network_profile.service_cidr, 0))
+    error_message = "Service CIDR must be a valid CIDR block."
+  }
+  validation {
+    condition     = contains(["Loadbalancer", "UserDefinedRouting"], var.network_profile.outbound_type)
+    error_message = "Outbound type must be either 'Loadbalancer' or 'UserDefinedRouting'."
   }
 }
 
@@ -20,6 +131,59 @@ variable "name" {
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
+}
+
+variable "service_principal" {
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  description = <<DESCRIPTION
+Configuration for the service principal used by the cluster.
+
+- `client_id` - (Required) The client ID of the service principal.
+- `client_secret` - (Required) The client secret of the service principal.
+DESCRIPTION
+  sensitive   = true
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.service_principal.client_id))
+    error_message = "Client ID must be a valid GUID."
+  }
+}
+
+variable "worker_profile" {
+  type = object({
+    subnet_id                  = string
+    vm_size                    = string
+    node_count                 = number
+    disk_size_gb               = number
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+  description = <<DESCRIPTION
+Configuration for the worker node profile.
+
+- `subnet_id` - (Required) The subnet ID for the worker nodes.
+- `vm_size` - (Required) The VM size for the worker nodes.
+- `node_count` - (Required) The number of worker nodes.
+- `disk_size_gb` - (Required) The disk size in GB for worker nodes.
+- `disk_encryption_set_id` - (Optional) The disk encryption set ID for worker node disks.
+- `encryption_at_host_enabled` - (Optional) Whether encryption at host is enabled for worker nodes. Defaults to `false`.
+DESCRIPTION
+
+  validation {
+    condition     = can(regex("^/subscriptions/[0-9a-f-]+/resourceGroups/[^/]+/providers/Microsoft.Network/virtualNetworks/[^/]+/subnets/[^/]+$", var.worker_profile.subnet_id))
+    error_message = "Subnet ID must be a valid Azure subnet resource ID."
+  }
+  validation {
+    condition     = var.worker_profile.node_count >= 3 && var.worker_profile.node_count <= 20
+    error_message = "Worker node count must be between 3 and 20."
+  }
+  validation {
+    condition     = var.worker_profile.disk_size_gb >= 128
+    error_message = "Worker node disk size must be at least 128 GB."
+  }
 }
 
 # required AVM interfaces
@@ -231,4 +395,22 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string, null)
+    delete = optional(string, null)
+    read   = optional(string, null)
+    update = optional(string, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Timeout configuration for the Azure Red Hat OpenShift cluster resource.
+
+- `create` - (Optional) Timeout for creating the cluster. Defaults to 90 minutes.
+- `delete` - (Optional) Timeout for deleting the cluster. Defaults to 90 minutes.
+- `read` - (Optional) Timeout for reading the cluster. Defaults to 5 minutes.
+- `update` - (Optional) Timeout for updating the cluster. Defaults to 90 minutes.
+DESCRIPTION
 }

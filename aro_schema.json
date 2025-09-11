@@ -1,0 +1,284 @@
+{
+  "version": 0,
+  "block": {
+    "attributes": {
+      "console_url": {
+        "type": "string",
+        "description_kind": "plain",
+        "computed": true
+      },
+      "id": {
+        "type": "string",
+        "description_kind": "plain",
+        "optional": true,
+        "computed": true
+      },
+      "location": {
+        "type": "string",
+        "description_kind": "plain",
+        "required": true
+      },
+      "name": {
+        "type": "string",
+        "description_kind": "plain",
+        "required": true
+      },
+      "resource_group_name": {
+        "type": "string",
+        "description_kind": "plain",
+        "required": true
+      },
+      "tags": {
+        "type": [
+          "map",
+          "string"
+        ],
+        "description_kind": "plain",
+        "optional": true
+      }
+    },
+    "block_types": {
+      "api_server_profile": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "ip_address": {
+              "type": "string",
+              "description_kind": "plain",
+              "computed": true
+            },
+            "url": {
+              "type": "string",
+              "description_kind": "plain",
+              "computed": true
+            },
+            "visibility": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      },
+      "cluster_profile": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "domain": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            },
+            "fips_enabled": {
+              "type": "bool",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "managed_resource_group_name": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "pull_secret": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true,
+              "sensitive": true
+            },
+            "resource_group_id": {
+              "type": "string",
+              "description_kind": "plain",
+              "computed": true
+            },
+            "version": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      },
+      "ingress_profile": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "ip_address": {
+              "type": "string",
+              "description_kind": "plain",
+              "computed": true
+            },
+            "name": {
+              "type": "string",
+              "description_kind": "plain",
+              "computed": true
+            },
+            "visibility": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      },
+      "main_profile": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "disk_encryption_set_id": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "encryption_at_host_enabled": {
+              "type": "bool",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "subnet_id": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            },
+            "vm_size": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      },
+      "network_profile": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "outbound_type": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "pod_cidr": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            },
+            "preconfigured_network_security_group_enabled": {
+              "type": "bool",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "service_cidr": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      },
+      "service_principal": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "client_id": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            },
+            "client_secret": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true,
+              "sensitive": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      },
+      "timeouts": {
+        "nesting_mode": "single",
+        "block": {
+          "attributes": {
+            "create": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "delete": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "read": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "update": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            }
+          },
+          "description_kind": "plain"
+        }
+      },
+      "worker_profile": {
+        "nesting_mode": "list",
+        "block": {
+          "attributes": {
+            "disk_encryption_set_id": {
+              "type": "string",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "disk_size_gb": {
+              "type": "number",
+              "description_kind": "plain",
+              "required": true
+            },
+            "encryption_at_host_enabled": {
+              "type": "bool",
+              "description_kind": "plain",
+              "optional": true
+            },
+            "node_count": {
+              "type": "number",
+              "description_kind": "plain",
+              "required": true
+            },
+            "subnet_id": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            },
+            "vm_size": {
+              "type": "string",
+              "description_kind": "plain",
+              "required": true
+            }
+          },
+          "description_kind": "plain"
+        },
+        "min_items": 1,
+        "max_items": 1
+      }
+    },
+    "description_kind": "plain"
+  }
+}

@@ -1,1 +1,5 @@
-404: Not Found
+blank_issues_enabled: true
+contact_links:
+  - name: New AVM Module Proposal 📝
+    url: https://aka.ms/AVM/ModuleProposal
+    about: Want a new AVM Module to exist? Let us know!

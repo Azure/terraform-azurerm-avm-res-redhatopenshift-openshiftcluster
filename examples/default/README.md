@@ -19,7 +19,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     modtm = {
       source  = "azure/modtm"
@@ -53,7 +53,7 @@ resource "random_string" "suffix" {
 }
 
 data "azurerm_client_config" "current" {}
-data "azuread_client_config" "current" {}
+# data "azuread_client_config" "current" {}  # Unused data source
 
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
@@ -153,7 +153,7 @@ module "aro_cluster" {
     disk_encryption_set_id     = null
     encryption_at_host_enabled = false # Match portal template
   }
-  enable_telemetry = true
+  enable_telemetry = var.enable_telemetry
   timeouts = {
     create = "120m"
     delete = "120m"
@@ -177,7 +177,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) (~> 2.15)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -197,7 +197,6 @@ The following resources are used by this module:
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azuread_client_config.current](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/client_config) (data source)
 - [azuread_service_principal.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 

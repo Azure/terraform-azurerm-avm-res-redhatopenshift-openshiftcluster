@@ -1,3 +1,15 @@
+# This variable is used to determine if the private_dns_zone_group block should be included,
+# or if it is to be managed externally, e.g. using Azure Policy.
+# https://github.com/Azure/terraform-azurerm-avm-res-keyvault-vault/issues/32
+# Azure Red Hat OpenShift does not support Azure Private Link endpoints
+# Commenting out this variable as it's not applicable to ARO
+# variable "private_endpoints_manage_dns_zone_group" {
+#   type        = bool
+#   default     = true
+#   description = "Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
+#   nullable    = false
+# }
+
 # Azure Red Hat OpenShift specific variables
 variable "api_server_profile" {
   type = object({
@@ -353,18 +365,6 @@ A map of private endpoints to create on this resource. The map key is deliberate
 DESCRIPTION
   nullable    = false
 }
-
-# This variable is used to determine if the private_dns_zone_group block should be included,
-# or if it is to be managed externally, e.g. using Azure Policy.
-# https://github.com/Azure/terraform-azurerm-avm-res-keyvault-vault/issues/32
-# Azure Red Hat OpenShift does not support Azure Private Link endpoints
-# Commenting out this variable as it's not applicable to ARO
-# variable "private_endpoints_manage_dns_zone_group" {
-#   type        = bool
-#   default     = true
-#   description = "Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
-#   nullable    = false
-# }
 
 variable "role_assignments" {
   type = map(object({

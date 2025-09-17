@@ -42,88 +42,50 @@ provider "azurerm" {
 
 provider "azuread" {}
 
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
-}
-
-# This allows us to randomize the region for the resource group.
-resource "random_integer" "region_index" {
-  max = length(local.allowed_regions) - 1
-  min = 0
-}
-
-# Filter regions to only those that support ARO
 locals {
-  # ARO is available in these regions as of 2024
-  allowed_regions = [
-    for region in module.regions.regions :
-    region if contains([
-      "East US",
-      "East US 2",
-      "West US 2",
-      "Central US",
-      "West Europe",
-      "North Europe",
-      "UK South",
-      "France Central",
-      "Australia East",
-      "Southeast Asia"
-    ], region.display_name)
-  ]
-}
-## End of section to provide a random Azure region for the resource group
-
-# This ensures we have unique CAF compliant names for our resources.
-module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  deployment_region = "westus"
 }
 
-# Current user/service principal data
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
 data "azurerm_client_config" "current" {}
+data "azuread_client_config" "current" {}
 
-# This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = local.allowed_regions[random_integer.region_index.result].name
-  name     = module.naming.resource_group.name_unique
+  location = local.deployment_region
+  name     = "aro-rg-${random_string.suffix.result}"
 }
 
-# Create a virtual network for the ARO cluster
 resource "azurerm_virtual_network" "this" {
   location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
+  name                = "aro-vnet-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/22"]
+  address_space       = ["10.0.0.0/23"] # Match portal template: smaller address space
 }
 
-# Create subnet for master nodes
-resource "azurerm_subnet" "master" {
-  address_prefixes     = ["10.0.0.0/24"]
-  name                 = "master-subnet"
+resource "azurerm_subnet" "main_subnet" {
+  address_prefixes                              = ["10.0.0.0/27"] # Match portal: master subnet
+  name                                          = "master-subnet" # Match portal naming
+  resource_group_name                           = azurerm_resource_group.this.name
+  virtual_network_name                          = azurerm_virtual_network.this.name
+  private_link_service_network_policies_enabled = false # Match portal: disabled for master
+  service_endpoints                             = ["Microsoft.ContainerRegistry"]
+}
+
+resource "azurerm_subnet" "worker_subnet" {
+  address_prefixes     = ["10.0.0.128/25"] # Match portal: worker subnet
+  name                 = "worker-subnet"   # Match portal naming
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.this.name
-  service_endpoints = [
-    "Microsoft.ContainerRegistry"
-  ]
+  service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
-# Create subnet for worker nodes  
-resource "azurerm_subnet" "worker" {
-  address_prefixes     = ["10.0.1.0/24"]
-  name                 = "worker-subnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-  service_endpoints = [
-    "Microsoft.ContainerRegistry"
-  ]
-}
-
-# Create service principal for ARO cluster
 resource "azuread_application" "aro" {
-  display_name = "aro-${module.naming.unique-seed}"
+  display_name = "aro-app-${random_string.suffix.result}"
 }
 
 resource "azuread_service_principal" "aro" {
@@ -134,58 +96,64 @@ resource "azuread_service_principal_password" "aro" {
   service_principal_id = azuread_service_principal.aro.object_id
 }
 
-# Assign required permissions to the service principal
-resource "azurerm_role_assignment" "aro_contributor" {
-  principal_id         = azuread_service_principal.aro.object_id
-  scope                = azurerm_virtual_network.this.id
-  role_definition_name = "Contributor"
+data "azuread_service_principal" "redhatopenshift" {
+  client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
 }
 
-# This is the module call
+resource "azurerm_role_assignment" "role_network1" {
+  principal_id       = azuread_service_principal.aro.object_id
+  scope              = azurerm_virtual_network.this.id
+  role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7" # Network Contributor exact ID from portal
+}
+
+resource "azurerm_role_assignment" "role_network2" {
+  principal_id       = data.azuread_service_principal.redhatopenshift.object_id
+  scope              = azurerm_virtual_network.this.id
+  role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7" # Network Contributor exact ID from portal
+}
+
 module "aro_cluster" {
   source = "../../"
 
-  # API server configuration
   api_server_profile = {
     visibility = "Public"
   }
-  # Cluster configuration
   cluster_profile = {
-    domain  = "aro${module.naming.unique-seed}"
-    version = "4.11.0" # Use appropriate ARO version
+    domain                      = "aro${random_string.suffix.result}"
+    version                     = "4.14.16" # Use a known stable version
+    fips_enabled                = false     # Match portal template
+    managed_resource_group_name = null      # Let Azure generate
+    pull_secret                 = null      # Will fail without real pull secret but let's see other issues first
   }
-  # Ingress configuration
   ingress_profile = {
     visibility = "Public"
   }
-  # Basic configuration
   location = azurerm_resource_group.this.location
-  # Master node configuration
   main_profile = {
-    subnet_id = azurerm_subnet.master.id
-    vm_size   = "Standard_D8s_v3"
+    vm_size                    = "Standard_D8s_v3"
+    subnet_id                  = azurerm_subnet.main_subnet.id
+    disk_encryption_set_id     = null
+    encryption_at_host_enabled = false # Match portal template
   }
-  name = "aro-${module.naming.unique-seed}"
-  # Network configuration
+  name = "aro-cluster-${random_string.suffix.result}"
   network_profile = {
     pod_cidr     = "10.128.0.0/14"
     service_cidr = "172.30.0.0/16"
   }
   resource_group_name = azurerm_resource_group.this.name
-  # Service principal configuration
   service_principal = {
     client_id     = azuread_application.aro.client_id
     client_secret = azuread_service_principal_password.aro.value
   }
-  # Worker node configuration
   worker_profile = {
-    subnet_id    = azurerm_subnet.worker.id
-    vm_size      = "Standard_D4s_v3"
-    node_count   = 3
-    disk_size_gb = 128
+    vm_size                    = "Standard_D4s_v3"
+    disk_size_gb               = 128
+    node_count                 = 3
+    subnet_id                  = azurerm_subnet.worker_subnet.id
+    disk_encryption_set_id     = null
+    encryption_at_host_enabled = false # Match portal template
   }
-  enable_telemetry = var.enable_telemetry
-  # Timeouts
+  enable_telemetry = true
   timeouts = {
     create = "120m"
     delete = "120m"
@@ -193,9 +161,11 @@ module "aro_cluster" {
   }
 
   depends_on = [
-    azurerm_role_assignment.aro_contributor
+    azurerm_role_assignment.role_network1,
+    azurerm_role_assignment.role_network2,
   ]
 }
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -221,11 +191,14 @@ The following resources are used by this module:
 - [azuread_service_principal.aro](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) (resource)
 - [azuread_service_principal_password.aro](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal_password) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_role_assignment.aro_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_subnet.master](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_subnet.worker](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_role_assignment.role_network1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.role_network2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_subnet.main_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
-- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [azuread_client_config.current](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/client_config) (data source)
+- [azuread_service_principal.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -249,7 +222,11 @@ Default: `true`
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_console_url"></a> [console\_url](#output\_console\_url)
+
+Description: The URL of the OpenShift console
 
 ## Modules
 
@@ -260,18 +237,6 @@ The following Modules are called:
 Source: ../../
 
 Version:
-
-### <a name="module_naming"></a> [naming](#module\_naming)
-
-Source: Azure/naming/azurerm
-
-Version: ~> 0.3
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
-
-Version: ~> 0.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

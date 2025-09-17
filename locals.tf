@@ -1,9 +1,5 @@
 # ARO-specific locals
-locals {
-  # Extract subnet information for validation
-  main_subnet_parts   = split("/", var.main_profile.subnet_id)
-  worker_subnet_parts = split("/", var.worker_profile.subnet_id)
-}
+# Locals for subnet validation have been removed as they were unused
 locals {
   # managed_identities = {
   #   system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {

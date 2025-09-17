@@ -8,7 +8,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     modtm = {
       source  = "azure/modtm"
@@ -42,7 +42,7 @@ resource "random_string" "suffix" {
 }
 
 data "azurerm_client_config" "current" {}
-data "azuread_client_config" "current" {}
+# data "azuread_client_config" "current" {}  # Unused data source
 
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
@@ -142,7 +142,7 @@ module "aro_cluster" {
     disk_encryption_set_id     = null
     encryption_at_host_enabled = false # Match portal template
   }
-  enable_telemetry = true
+  enable_telemetry = var.enable_telemetry
   timeouts = {
     create = "120m"
     delete = "120m"

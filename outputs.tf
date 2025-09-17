@@ -39,3 +39,9 @@ output "resource" {
   description = "This is the full output for the Azure Red Hat OpenShift cluster resource."
   value       = azurerm_redhat_openshift_cluster.this
 }
+
+# Required output for AVM compliance
+output "resource_id" {
+  description = "The resource ID of the Azure Red Hat OpenShift cluster."
+  value       = azurerm_redhat_openshift_cluster.this.id
+}

@@ -224,7 +224,7 @@ variable "diagnostic_settings" {
   }))
   default     = {}
   description = <<DESCRIPTION
-A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+A map of diagnostic settings to create on the Azure Red Hat OpenShift cluster. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
@@ -311,6 +311,7 @@ variable "private_endpoints" {
       condition                              = optional(string, null)
       condition_version                      = optional(string, null)
       delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     lock = optional(object({
       kind = string
@@ -356,13 +357,14 @@ DESCRIPTION
 # This variable is used to determine if the private_dns_zone_group block should be included,
 # or if it is to be managed externally, e.g. using Azure Policy.
 # https://github.com/Azure/terraform-azurerm-avm-res-keyvault-vault/issues/32
-# Alternatively you can use AzAPI, which does not have this issue.
-variable "private_endpoints_manage_dns_zone_group" {
-  type        = bool
-  default     = true
-  description = "Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
-  nullable    = false
-}
+# Azure Red Hat OpenShift does not support Azure Private Link endpoints
+# Commenting out this variable as it's not applicable to ARO
+# variable "private_endpoints_manage_dns_zone_group" {
+#   type        = bool
+#   default     = true
+#   description = "Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
+#   nullable    = false
+# }
 
 variable "role_assignments" {
   type = map(object({
@@ -373,6 +375,7 @@ variable "role_assignments" {
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
   }))
   default     = {}
   description = <<DESCRIPTION

@@ -1,15 +1,10 @@
 # ARO-specific locals
 locals {
   # Extract subnet information for validation
-  main_subnet_parts = split("/", var.main_profile.subnet_id)
-  # Validate that both subnets are in the same virtual network
-  # main_vnet_name = local.main_subnet_parts[8]  # Unused, commented out
+  main_subnet_parts   = split("/", var.main_profile.subnet_id)
+  worker_subnet_parts = split("/", var.worker_profile.subnet_id)
   # Generate a default managed resource group name if not provided
   # managed_resource_group_name = var.cluster_profile.managed_resource_group_name != null ? var.cluster_profile.managed_resource_group_name : "MC_${var.resource_group_name}_${var.name}_${var.location}"
-  # Check if subnets are in the same VNet (for validation)
-  # subnets_same_vnet   = local.main_vnet_name == local.worker_vnet_name
-  worker_subnet_parts = split("/", var.worker_profile.subnet_id)
-  # worker_vnet_name    = local.worker_subnet_parts[8]  # Unused, commented out
 }
 locals {
   # managed_identities = {

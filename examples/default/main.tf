@@ -10,10 +10,11 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
-    }
+    # modtm provider is inherited from the module, no need to declare it here
+    # modtm = {
+    #   source  = "azure/modtm"
+    #   version = "~> 0.3"
+    # }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"

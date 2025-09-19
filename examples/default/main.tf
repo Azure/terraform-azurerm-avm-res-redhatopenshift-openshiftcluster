@@ -2,10 +2,6 @@ terraform {
   required_version = "~> 1.5"
 
   required_providers {
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.15"
-    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -24,8 +20,6 @@ provider "azurerm" {
     }
   }
 }
-
-provider "azuread" {}
 
 locals {
   deployment_region = "westus"
@@ -66,22 +60,16 @@ resource "azurerm_subnet" "worker_subnet" {
   service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
-# Service principal for ARO cluster
-resource "azuread_application" "aro" {
-  display_name = "aro-app-${random_string.suffix.result}"
-}
+# Service principal for ARO cluster - must be provided via variables
+# In CI/CD environments, create the service principal externally and pass the values
+# Example: terraform apply -var="service_principal_client_id=<your-client-id>" -var="service_principal_client_secret=<your-secret>"
 
-resource "azuread_service_principal" "aro" {
-  client_id = azuread_application.aro.client_id
-}
-
-resource "azuread_service_principal_password" "aro" {
-  service_principal_id = azuread_service_principal.aro.object_id
-}
-
-# Role assignment for ARO service principal on VNet
+# Optional role assignment for ARO service principal on VNet
+# Only created if service_principal_object_id is provided
 resource "azurerm_role_assignment" "role_network1" {
-  principal_id         = azuread_service_principal.aro.object_id
+  count = var.service_principal_object_id != null ? 1 : 0
+
+  principal_id         = var.service_principal_object_id
   scope                = azurerm_virtual_network.this.id
   role_definition_name = "Network Contributor"
 }
@@ -116,8 +104,8 @@ module "aro_cluster" {
   }
   resource_group_name = azurerm_resource_group.this.name
   service_principal = {
-    client_id     = azuread_application.aro.client_id
-    client_secret = azuread_service_principal_password.aro.value
+    client_id     = var.service_principal_client_id
+    client_secret = var.service_principal_client_secret
   }
   worker_profile = {
     vm_size                    = "Standard_D4s_v3"

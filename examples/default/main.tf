@@ -37,8 +37,6 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-data "azurerm_client_config" "current" {}
-
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
   name     = "aro-rg-${random_string.suffix.result}"

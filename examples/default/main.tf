@@ -10,11 +10,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-    # modtm provider is inherited from the module, no need to declare it here
-    # modtm = {
-    #   source  = "azure/modtm"
-    #   version = "~> 0.3"
-    # }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -43,7 +38,6 @@ resource "random_string" "suffix" {
 }
 
 data "azurerm_client_config" "current" {}
-# data "azuread_client_config" "current" {}  # Unused data source
 
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
@@ -58,17 +52,17 @@ resource "azurerm_virtual_network" "this" {
 }
 
 resource "azurerm_subnet" "main_subnet" {
-  address_prefixes                              = ["10.0.0.0/27"] # Match portal: master subnet
-  name                                          = "master-subnet" # Match portal naming
+  address_prefixes                              = ["10.0.0.0/27"]
+  name                                          = "master-subnet"
   resource_group_name                           = azurerm_resource_group.this.name
   virtual_network_name                          = azurerm_virtual_network.this.name
-  private_link_service_network_policies_enabled = false # Match portal: disabled for master
+  private_link_service_network_policies_enabled = false
   service_endpoints                             = ["Microsoft.ContainerRegistry"]
 }
 
 resource "azurerm_subnet" "worker_subnet" {
-  address_prefixes     = ["10.0.0.128/25"] # Match portal: worker subnet
-  name                 = "worker-subnet"   # Match portal naming
+  address_prefixes     = ["10.0.0.128/25"]
+  name                 = "worker-subnet"
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.this.name
   service_endpoints    = ["Microsoft.ContainerRegistry"]
@@ -89,7 +83,8 @@ resource "azuread_service_principal_password" "aro" {
 # Query the Azure Red Hat OpenShift Resource Provider service principal by display name
 # This is more reliable than using a hardcoded client ID that may not exist in all tenants
 data "azuread_service_principal" "redhatopenshift" {
-  count        = var.assign_aro_rp_permissions ? 1 : 0
+  count = var.assign_aro_rp_permissions ? 1 : 0
+
   display_name = "Azure Red Hat OpenShift RP"
 }
 
@@ -100,7 +95,8 @@ resource "azurerm_role_assignment" "role_network1" {
 }
 
 resource "azurerm_role_assignment" "role_network2" {
-  count              = var.assign_aro_rp_permissions ? 1 : 0
+  count = var.assign_aro_rp_permissions ? 1 : 0
+
   principal_id       = data.azuread_service_principal.redhatopenshift[0].object_id
   scope              = azurerm_virtual_network.this.id
   role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7" # Network Contributor exact ID from portal
@@ -114,10 +110,10 @@ module "aro_cluster" {
   }
   cluster_profile = {
     domain                      = "aro${random_string.suffix.result}"
-    version                     = "4.14.16" # Use a known stable version
-    fips_enabled                = false     # Match portal template
-    managed_resource_group_name = null      # Let Azure generate
-    pull_secret                 = null      # Will fail without real pull secret but let's see other issues first
+    version                     = "4.14.16"
+    fips_enabled                = false
+    managed_resource_group_name = null
+    pull_secret                 = null
   }
   ingress_profile = {
     visibility = "Public"
@@ -127,7 +123,7 @@ module "aro_cluster" {
     vm_size                    = "Standard_D8s_v3"
     subnet_id                  = azurerm_subnet.main_subnet.id
     disk_encryption_set_id     = null
-    encryption_at_host_enabled = false # Match portal template
+    encryption_at_host_enabled = false
   }
   name = "aro-cluster-${random_string.suffix.result}"
   network_profile = {
@@ -145,7 +141,7 @@ module "aro_cluster" {
     node_count                 = 3
     subnet_id                  = azurerm_subnet.worker_subnet.id
     disk_encryption_set_id     = null
-    encryption_at_host_enabled = false # Match portal template
+    encryption_at_host_enabled = false
   }
   enable_telemetry = var.enable_telemetry
   timeouts = {

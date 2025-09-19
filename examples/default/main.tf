@@ -86,8 +86,11 @@ resource "azuread_service_principal_password" "aro" {
   service_principal_id = azuread_service_principal.aro.object_id
 }
 
+# Query the Azure Red Hat OpenShift Resource Provider service principal by display name
+# This is more reliable than using a hardcoded client ID that may not exist in all tenants
 data "azuread_service_principal" "redhatopenshift" {
-  client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+  count        = var.assign_aro_rp_permissions ? 1 : 0
+  display_name = "Azure Red Hat OpenShift RP"
 }
 
 resource "azurerm_role_assignment" "role_network1" {
@@ -97,7 +100,8 @@ resource "azurerm_role_assignment" "role_network1" {
 }
 
 resource "azurerm_role_assignment" "role_network2" {
-  principal_id       = data.azuread_service_principal.redhatopenshift.object_id
+  count              = var.assign_aro_rp_permissions ? 1 : 0
+  principal_id       = data.azuread_service_principal.redhatopenshift[0].object_id
   scope              = azurerm_virtual_network.this.id
   role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7" # Network Contributor exact ID from portal
 }

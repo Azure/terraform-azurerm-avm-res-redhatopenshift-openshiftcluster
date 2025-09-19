@@ -79,6 +79,7 @@ resource "azurerm_subnet" "worker_subnet" {
   service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
+# Service principal for ARO cluster
 resource "azuread_application" "aro" {
   display_name = "aro-app-${random_string.suffix.result}"
 }
@@ -91,26 +92,11 @@ resource "azuread_service_principal_password" "aro" {
   service_principal_id = azuread_service_principal.aro.object_id
 }
 
-# Query the Azure Red Hat OpenShift Resource Provider service principal by display name
-# This is more reliable than using a hardcoded client ID that may not exist in all tenants
-data "azuread_service_principal" "redhatopenshift" {
-  count = var.assign_aro_rp_permissions ? 1 : 0
-
-  display_name = "Azure Red Hat OpenShift RP"
-}
-
+# Role assignment for ARO service principal on VNet
 resource "azurerm_role_assignment" "role_network1" {
-  principal_id       = azuread_service_principal.aro.object_id
-  scope              = azurerm_virtual_network.this.id
-  role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7" # Network Contributor exact ID from portal
-}
-
-resource "azurerm_role_assignment" "role_network2" {
-  count = var.assign_aro_rp_permissions ? 1 : 0
-
-  principal_id       = data.azuread_service_principal.redhatopenshift[0].object_id
-  scope              = azurerm_virtual_network.this.id
-  role_definition_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7" # Network Contributor exact ID from portal
+  principal_id         = azuread_service_principal.aro.object_id
+  scope                = azurerm_virtual_network.this.id
+  role_definition_name = "Network Contributor"
 }
 
 module "aro_cluster" {
@@ -163,7 +149,6 @@ module "aro_cluster" {
 
   depends_on = [
     azurerm_role_assignment.role_network1,
-    azurerm_role_assignment.role_network2,
   ]
 }
 
@@ -191,12 +176,10 @@ The following resources are used by this module:
 - [azuread_service_principal_password.aro](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal_password) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.role_network1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.role_network2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.main_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azuread_service_principal.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->

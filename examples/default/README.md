@@ -48,8 +48,6 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-data "azurerm_client_config" "current" {}
-
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
   name     = "aro-rg-${random_string.suffix.result}"
@@ -180,7 +178,6 @@ The following resources are used by this module:
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -190,16 +187,6 @@ No required inputs.
 ## Optional Inputs
 
 The following input variables are optional (have default values):
-
-### <a name="input_assign_aro_rp_permissions"></a> [assign\_aro\_rp\_permissions](#input\_assign\_aro\_rp\_permissions)
-
-Description: Whether to assign Network Contributor permissions to the Azure Red Hat OpenShift Resource Provider.  
-This requires the ARO RP to be registered in the tenant. Set to false for CI/CD environments  
-where the ARO RP may not be available.
-
-Type: `bool`
-
-Default: `false`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 

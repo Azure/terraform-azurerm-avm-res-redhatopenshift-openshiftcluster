@@ -172,22 +172,6 @@ Description: The resource group where the resources will be deployed.
 
 Type: `string`
 
-### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
-
-Description: Configuration for the service principal used by the cluster.
-
-- `client_id` - (Required) The client ID of the service principal.
-- `client_secret` - (Required) The client secret of the service principal.
-
-Type:
-
-```hcl
-object({
-    client_id     = string
-    client_secret = string
-  })
-```
-
 ### <a name="input_worker_profile"></a> [worker\_profile](#input\_worker\_profile)
 
 Description: Configuration for the worker node profile.
@@ -416,6 +400,26 @@ map(object({
 ```
 
 Default: `{}`
+
+### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
+
+Description: Configuration for the service principal used by the cluster.  
+If not provided, ARO will auto-create a service principal during deployment.  
+Note: Auto-creation requires the deploying identity to have Azure AD permissions.
+
+- `client_id` - (Required) The client ID of the service principal.
+- `client_secret` - (Required) The client secret of the service principal.
+
+Type:
+
+```hcl
+object({
+    client_id     = string
+    client_secret = string
+  })
+```
+
+Default: `null`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

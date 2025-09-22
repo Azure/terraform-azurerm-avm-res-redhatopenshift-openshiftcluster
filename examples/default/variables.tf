@@ -1,3 +1,13 @@
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
+If it is set to false, then no telemetry will be collected.
+DESCRIPTION
+}
+
 variable "service_principal_client_id" {
   type        = string
   default     = null
@@ -17,16 +27,6 @@ The client secret of the service principal for the ARO cluster.
 Required only if service_principal_client_id is provided.
 DESCRIPTION
   sensitive   = true
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
 }
 
 variable "service_principal_object_id" {

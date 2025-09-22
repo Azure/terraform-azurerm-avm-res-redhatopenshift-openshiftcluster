@@ -133,28 +133,6 @@ variable "resource_group_name" {
   description = "The resource group where the resources will be deployed."
 }
 
-variable "service_principal" {
-  type = object({
-    client_id     = string
-    client_secret = string
-  })
-  default = null
-  description = <<DESCRIPTION
-Configuration for the service principal used by the cluster.
-If not provided, ARO will auto-create a service principal during deployment.
-Note: Auto-creation requires the deploying identity to have Azure AD permissions.
-
-- `client_id` - (Required) The client ID of the service principal.
-- `client_secret` - (Required) The client secret of the service principal.
-DESCRIPTION
-  sensitive   = true
-
-  validation {
-    condition = var.service_principal == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.service_principal.client_id))
-    error_message = "Client ID must be a valid GUID when service_principal is provided."
-  }
-}
-
 variable "worker_profile" {
   type = object({
     subnet_id                  = string
@@ -400,6 +378,28 @@ A map of role assignments to create on this resource. The map key is deliberatel
 > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 DESCRIPTION
   nullable    = false
+}
+
+variable "service_principal" {
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+Configuration for the service principal used by the cluster.
+If not provided, ARO will auto-create a service principal during deployment.
+Note: Auto-creation requires the deploying identity to have Azure AD permissions.
+
+- `client_id` - (Required) The client ID of the service principal.
+- `client_secret` - (Required) The client secret of the service principal.
+DESCRIPTION
+  sensitive   = true
+
+  validation {
+    condition     = var.service_principal == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.service_principal.client_id))
+    error_message = "Client ID must be a valid GUID when service_principal is provided."
+  }
 }
 
 # tflint-ignore: terraform_unused_declarations

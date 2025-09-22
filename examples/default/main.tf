@@ -103,10 +103,11 @@ module "aro_cluster" {
     service_cidr = "172.30.0.0/16"
   }
   resource_group_name = azurerm_resource_group.this.name
-  service_principal = {
+  # service_principal is optional - if not provided, ARO will auto-create one
+  service_principal = var.service_principal_client_id != null && var.service_principal_client_secret != null ? {
     client_id     = var.service_principal_client_id
     client_secret = var.service_principal_client_secret
-  }
+  } : null
   worker_profile = {
     vm_size                    = "Standard_D4s_v3"
     disk_size_gb               = 128

@@ -30,8 +30,8 @@ resource "azurerm_redhat_openshift_cluster" "this" {
     preconfigured_network_security_group_enabled = var.network_profile.preconfigured_network_security_group_enabled
   }
   service_principal {
-    client_id     = var.service_principal.client_id
-    client_secret = var.service_principal.client_secret
+    client_id     = var.service_principal != null ? var.service_principal.client_id : "00000000-0000-0000-0000-000000000000"
+    client_secret = var.service_principal != null ? var.service_principal.client_secret : "dummy-secret-aro-will-auto-create"
   }
   worker_profile {
     disk_size_gb               = var.worker_profile.disk_size_gb

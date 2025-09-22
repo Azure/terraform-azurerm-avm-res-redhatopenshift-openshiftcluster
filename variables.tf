@@ -138,8 +138,11 @@ variable "service_principal" {
     client_id     = string
     client_secret = string
   })
+  default = null
   description = <<DESCRIPTION
 Configuration for the service principal used by the cluster.
+If not provided, ARO will auto-create a service principal during deployment.
+Note: Auto-creation requires the deploying identity to have Azure AD permissions.
 
 - `client_id` - (Required) The client ID of the service principal.
 - `client_secret` - (Required) The client secret of the service principal.
@@ -147,8 +150,8 @@ DESCRIPTION
   sensitive   = true
 
   validation {
-    condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.service_principal.client_id))
-    error_message = "Client ID must be a valid GUID."
+    condition = var.service_principal == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.service_principal.client_id))
+    error_message = "Client ID must be a valid GUID when service_principal is provided."
   }
 }
 

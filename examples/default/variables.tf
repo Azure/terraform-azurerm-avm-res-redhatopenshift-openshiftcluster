@@ -1,16 +1,20 @@
 variable "service_principal_client_id" {
   type        = string
+  default     = null
   description = <<DESCRIPTION
 The client ID of the service principal for the ARO cluster.
-This service principal must have appropriate permissions to create and manage the cluster.
+If not provided, ARO will auto-create a service principal during deployment.
+Note: Auto-creation requires the deploying identity to have Azure AD permissions.
 DESCRIPTION
   sensitive   = true
 }
 
 variable "service_principal_client_secret" {
   type        = string
+  default     = null
   description = <<DESCRIPTION
 The client secret of the service principal for the ARO cluster.
+Required only if service_principal_client_id is provided.
 DESCRIPTION
   sensitive   = true
 }

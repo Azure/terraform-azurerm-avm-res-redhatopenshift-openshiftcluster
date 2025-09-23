@@ -21,6 +21,23 @@ provider "azurerm" {
   }
 }
 
+# Register required resource providers for ARO deployment
+resource "azurerm_resource_provider_registration" "redhatopenshift" {
+  name = "Microsoft.RedHatOpenShift"
+}
+
+resource "azurerm_resource_provider_registration" "compute" {
+  name = "Microsoft.Compute"
+}
+
+resource "azurerm_resource_provider_registration" "storage" {
+  name = "Microsoft.Storage"
+}
+
+resource "azurerm_resource_provider_registration" "authorization" {
+  name = "Microsoft.Authorization"
+}
+
 locals {
   deployment_region = "westus"
 }

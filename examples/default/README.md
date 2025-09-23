@@ -35,28 +35,35 @@ provider "azurerm" {
 
 # Register required resource providers for ARO deployment
 # Only register Microsoft.RedHatOpenShift as other providers are auto-registered by azurerm
-resource "azurerm_resource_provider_registration" "redhatopenshift" {
-  name = "Microsoft.RedHatOpenShift"
-}
+# NOTE: Commented out once registered
+# resource "azurerm_resource_provider_registration" "redhatopenshift" {
+#   name = "Microsoft.RedHatOpenShift"
+# }
 
 locals {
   deployment_region = "westus"
+  # Add timestamp to ensure uniqueness across runs
+  timestamp = formatdate("MMDDhhmm", timestamp())
 }
 
 resource "random_string" "suffix" {
-  length  = 8
+  length = 6
+  # Add keepers to force new random string on each run
+  keepers = {
+    timestamp = local.timestamp
+  }
   special = false
   upper   = false
 }
 
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
-  name     = "aro-rg-${random_string.suffix.result}"
+  name     = "aro-test-${local.timestamp}-${random_string.suffix.result}"
 }
 
 resource "azurerm_virtual_network" "this" {
   location            = azurerm_resource_group.this.location
-  name                = "aro-vnet-${random_string.suffix.result}"
+  name                = "aro-vnet-${local.timestamp}-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.this.name
   address_space       = ["10.0.0.0/23"] # Match portal template: smaller address space
 }
@@ -99,7 +106,7 @@ module "aro_cluster" {
     visibility = "Public"
   }
   cluster_profile = {
-    domain                      = "aro${random_string.suffix.result}"
+    domain                      = "aro${local.timestamp}${random_string.suffix.result}"
     version                     = "4.14.51"
     fips_enabled                = false
     managed_resource_group_name = null
@@ -115,7 +122,7 @@ module "aro_cluster" {
     disk_encryption_set_id     = null
     encryption_at_host_enabled = false
   }
-  name = "aro-cluster-${random_string.suffix.result}"
+  name = "aro-cluster-${local.timestamp}-${random_string.suffix.result}"
   network_profile = {
     pod_cidr     = "10.128.0.0/14"
     service_cidr = "172.30.0.0/16"
@@ -164,7 +171,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_resource_provider_registration.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
 - [azurerm_role_assignment.role_network1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.main_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)

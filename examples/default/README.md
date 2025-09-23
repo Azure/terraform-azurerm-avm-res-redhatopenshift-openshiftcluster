@@ -32,6 +32,23 @@ provider "azurerm" {
   }
 }
 
+# Register required resource providers for ARO deployment
+resource "azurerm_resource_provider_registration" "redhatopenshift" {
+  name = "Microsoft.RedHatOpenShift"
+}
+
+resource "azurerm_resource_provider_registration" "compute" {
+  name = "Microsoft.Compute"
+}
+
+resource "azurerm_resource_provider_registration" "storage" {
+  name = "Microsoft.Storage"
+}
+
+resource "azurerm_resource_provider_registration" "authorization" {
+  name = "Microsoft.Authorization"
+}
+
 locals {
   deployment_region = "westus"
 }
@@ -157,6 +174,10 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_resource_provider_registration.authorization](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
+- [azurerm_resource_provider_registration.compute](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
+- [azurerm_resource_provider_registration.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
+- [azurerm_resource_provider_registration.storage](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
 - [azurerm_role_assignment.role_network1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.main_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
@@ -174,8 +195,8 @@ The following input variables are optional (have default values):
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -184,8 +205,8 @@ Default: `true`
 
 ### <a name="input_service_principal_client_id"></a> [service\_principal\_client\_id](#input\_service\_principal\_client\_id)
 
-Description: The client ID of the service principal for the ARO cluster.
-If not provided, ARO will auto-create a service principal during deployment.
+Description: The client ID of the service principal for the ARO cluster.  
+If not provided, ARO will auto-create a service principal during deployment.  
 Note: Auto-creation requires the deploying identity to have Azure AD permissions.
 
 Type: `string`
@@ -194,7 +215,7 @@ Default: `null`
 
 ### <a name="input_service_principal_client_secret"></a> [service\_principal\_client\_secret](#input\_service\_principal\_client\_secret)
 
-Description: The client secret of the service principal for the ARO cluster.
+Description: The client secret of the service principal for the ARO cluster.  
 Required only if service\_principal\_client\_id is provided.
 
 Type: `string`
@@ -203,8 +224,8 @@ Default: `null`
 
 ### <a name="input_service_principal_object_id"></a> [service\_principal\_object\_id](#input\_service\_principal\_object\_id)
 
-Description: The object ID of the service principal for the ARO cluster.
-If provided, a Network Contributor role assignment will be created on the VNet.
+Description: The object ID of the service principal for the ARO cluster.  
+If provided, a Network Contributor role assignment will be created on the VNet.  
 If not provided, you must ensure the service principal has the necessary permissions manually.
 
 Type: `string`

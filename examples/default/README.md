@@ -100,7 +100,7 @@ module "aro_cluster" {
   }
   cluster_profile = {
     domain                      = "aro${random_string.suffix.result}"
-    version                     = "4.14.40"
+    version                     = "4.14.51"
     fips_enabled                = false
     managed_resource_group_name = null
     pull_secret                 = null

@@ -24,9 +24,10 @@ provider "azurerm" {
 
 # Register required resource providers for ARO deployment
 # Only register Microsoft.RedHatOpenShift as other providers are auto-registered by azurerm
-resource "azurerm_resource_provider_registration" "redhatopenshift" {
-  name = "Microsoft.RedHatOpenShift"
-}
+# NOTE: Commented out as provider is already registered in this subscription
+# resource "azurerm_resource_provider_registration" "redhatopenshift" {
+#   name = "Microsoft.RedHatOpenShift"
+# }
 
 locals {
   deployment_region = "westus"

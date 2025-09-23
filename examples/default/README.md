@@ -30,23 +30,13 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+  resource_provider_registrations = "none"
 }
 
 # Register required resource providers for ARO deployment
+# Only register Microsoft.RedHatOpenShift as other providers are auto-registered by azurerm
 resource "azurerm_resource_provider_registration" "redhatopenshift" {
   name = "Microsoft.RedHatOpenShift"
-}
-
-resource "azurerm_resource_provider_registration" "compute" {
-  name = "Microsoft.Compute"
-}
-
-resource "azurerm_resource_provider_registration" "storage" {
-  name = "Microsoft.Storage"
-}
-
-resource "azurerm_resource_provider_registration" "authorization" {
-  name = "Microsoft.Authorization"
 }
 
 locals {
@@ -110,7 +100,7 @@ module "aro_cluster" {
   }
   cluster_profile = {
     domain                      = "aro${random_string.suffix.result}"
-    version                     = "4.14.16"
+    version                     = "4.14.40"
     fips_enabled                = false
     managed_resource_group_name = null
     pull_secret                 = null
@@ -174,10 +164,7 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_resource_provider_registration.authorization](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
-- [azurerm_resource_provider_registration.compute](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
 - [azurerm_resource_provider_registration.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
-- [azurerm_resource_provider_registration.storage](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) (resource)
 - [azurerm_role_assignment.role_network1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.main_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)

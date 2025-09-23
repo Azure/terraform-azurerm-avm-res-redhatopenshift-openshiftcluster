@@ -19,23 +19,13 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+  resource_provider_registrations = "none"
 }
 
 # Register required resource providers for ARO deployment
+# Only register Microsoft.RedHatOpenShift as other providers are auto-registered by azurerm
 resource "azurerm_resource_provider_registration" "redhatopenshift" {
   name = "Microsoft.RedHatOpenShift"
-}
-
-resource "azurerm_resource_provider_registration" "compute" {
-  name = "Microsoft.Compute"
-}
-
-resource "azurerm_resource_provider_registration" "storage" {
-  name = "Microsoft.Storage"
-}
-
-resource "azurerm_resource_provider_registration" "authorization" {
-  name = "Microsoft.Authorization"
 }
 
 locals {
@@ -99,7 +89,7 @@ module "aro_cluster" {
   }
   cluster_profile = {
     domain                      = "aro${random_string.suffix.result}"
-    version                     = "4.14.16"
+    version                     = "4.14.40"
     fips_enabled                = false
     managed_resource_group_name = null
     pull_secret                 = null

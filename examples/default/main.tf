@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -45,6 +49,27 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+# Create Azure AD application for ARO cluster
+resource "azuread_application" "aro_cluster" {
+  display_name = "aro-cluster-${local.timestamp}-${random_string.suffix.result}"
+}
+
+# Create service principal for the application
+resource "azuread_service_principal" "aro_cluster" {
+  client_id = azuread_application.aro_cluster.client_id
+}
+
+# Create password for the service principal
+resource "azuread_service_principal_password" "aro_cluster" {
+  service_principal_id = azuread_service_principal.aro_cluster.object_id
+}
+
+# Get the Azure Red Hat OpenShift resource provider service principal
+data "azuread_service_principal" "redhatopenshift" {
+  # This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
+  client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+}
+
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
   name     = "aro-test-${local.timestamp}-${random_string.suffix.result}"
@@ -74,18 +99,18 @@ resource "azurerm_subnet" "worker_subnet" {
   service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
-# Service principal for ARO cluster - must be provided via variables
-# In CI/CD environments, create the service principal externally and pass the values
-# Example: terraform apply -var="service_principal_client_id=<your-client-id>" -var="service_principal_client_secret=<your-secret>"
-
-# Optional role assignment for ARO service principal on VNet
-# Only created if service_principal_object_id is provided
-resource "azurerm_role_assignment" "role_network1" {
-  count = var.service_principal_object_id != null ? 1 : 0
-
-  principal_id         = var.service_principal_object_id
+# Role assignment for ARO cluster service principal on VNet
+resource "azurerm_role_assignment" "role_network_cluster_sp" {
   scope                = azurerm_virtual_network.this.id
   role_definition_name = "Network Contributor"
+  principal_id         = azuread_service_principal.aro_cluster.object_id
+}
+
+# Role assignment for ARO Resource Provider service principal on VNet
+resource "azurerm_role_assignment" "role_network_aro_rp" {
+  scope                = azurerm_virtual_network.this.id
+  role_definition_name = "Network Contributor"
+  principal_id         = data.azuread_service_principal.redhatopenshift.object_id
 }
 
 module "aro_cluster" {
@@ -126,11 +151,11 @@ module "aro_cluster" {
     encryption_at_host_enabled = false
   }
   enable_telemetry = var.enable_telemetry
-  # service_principal is optional - if not provided, ARO will auto-create one
-  service_principal = var.service_principal_client_id != null && var.service_principal_client_secret != null ? {
-    client_id     = var.service_principal_client_id
-    client_secret = var.service_principal_client_secret
-  } : null
+  # Use the created service principal
+  service_principal = {
+    client_id     = azuread_application.aro_cluster.client_id
+    client_secret = azuread_service_principal_password.aro_cluster.value
+  }
   timeouts = {
     create = "120m"
     delete = "120m"
@@ -138,7 +163,7 @@ module "aro_cluster" {
   }
 
   depends_on = [
-    azurerm_role_assignment.role_network1,
+    azurerm_role_assignment.role_network_cluster_sp,
+    azurerm_role_assignment.role_network_aro_rp,
   ]
 }
-

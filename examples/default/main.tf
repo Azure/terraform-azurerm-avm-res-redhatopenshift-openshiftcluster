@@ -2,13 +2,13 @@ terraform {
   required_version = "~> 1.5"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
     azuread = {
       source  = "hashicorp/azuread"
       version = "~> 2.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -101,16 +101,16 @@ resource "azurerm_subnet" "worker_subnet" {
 
 # Role assignment for ARO cluster service principal on VNet
 resource "azurerm_role_assignment" "role_network_cluster_sp" {
+  principal_id         = azuread_service_principal.aro_cluster.object_id
   scope                = azurerm_virtual_network.this.id
   role_definition_name = "Network Contributor"
-  principal_id         = azuread_service_principal.aro_cluster.object_id
 }
 
 # Role assignment for ARO Resource Provider service principal on VNet
 resource "azurerm_role_assignment" "role_network_aro_rp" {
+  principal_id         = data.azuread_service_principal.redhatopenshift.object_id
   scope                = azurerm_virtual_network.this.id
   role_definition_name = "Network Contributor"
-  principal_id         = data.azuread_service_principal.redhatopenshift.object_id
 }
 
 module "aro_cluster" {

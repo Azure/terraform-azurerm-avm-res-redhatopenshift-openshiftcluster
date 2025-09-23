@@ -13,6 +13,10 @@ terraform {
   required_version = "~> 1.5"
 
   required_providers {
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -56,6 +60,27 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+# Create Azure AD application for ARO cluster
+resource "azuread_application" "aro_cluster" {
+  display_name = "aro-cluster-${local.timestamp}-${random_string.suffix.result}"
+}
+
+# Create service principal for the application
+resource "azuread_service_principal" "aro_cluster" {
+  client_id = azuread_application.aro_cluster.client_id
+}
+
+# Create password for the service principal
+resource "azuread_service_principal_password" "aro_cluster" {
+  service_principal_id = azuread_service_principal.aro_cluster.object_id
+}
+
+# Get the Azure Red Hat OpenShift resource provider service principal
+data "azuread_service_principal" "redhatopenshift" {
+  # This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
+  client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+}
+
 resource "azurerm_resource_group" "this" {
   location = local.deployment_region
   name     = "aro-test-${local.timestamp}-${random_string.suffix.result}"
@@ -85,16 +110,16 @@ resource "azurerm_subnet" "worker_subnet" {
   service_endpoints    = ["Microsoft.ContainerRegistry"]
 }
 
-# Service principal for ARO cluster - must be provided via variables
-# In CI/CD environments, create the service principal externally and pass the values
-# Example: terraform apply -var="service_principal_client_id=<your-client-id>" -var="service_principal_client_secret=<your-secret>"
+# Role assignment for ARO cluster service principal on VNet
+resource "azurerm_role_assignment" "role_network_cluster_sp" {
+  principal_id         = azuread_service_principal.aro_cluster.object_id
+  scope                = azurerm_virtual_network.this.id
+  role_definition_name = "Network Contributor"
+}
 
-# Optional role assignment for ARO service principal on VNet
-# Only created if service_principal_object_id is provided
-resource "azurerm_role_assignment" "role_network1" {
-  count = var.service_principal_object_id != null ? 1 : 0
-
-  principal_id         = var.service_principal_object_id
+# Role assignment for ARO Resource Provider service principal on VNet
+resource "azurerm_role_assignment" "role_network_aro_rp" {
+  principal_id         = data.azuread_service_principal.redhatopenshift.object_id
   scope                = azurerm_virtual_network.this.id
   role_definition_name = "Network Contributor"
 }
@@ -137,11 +162,11 @@ module "aro_cluster" {
     encryption_at_host_enabled = false
   }
   enable_telemetry = var.enable_telemetry
-  # service_principal is optional - if not provided, ARO will auto-create one
-  service_principal = var.service_principal_client_id != null && var.service_principal_client_secret != null ? {
-    client_id     = var.service_principal_client_id
-    client_secret = var.service_principal_client_secret
-  } : null
+  # Use the created service principal
+  service_principal = {
+    client_id     = azuread_application.aro_cluster.client_id
+    client_secret = azuread_service_principal_password.aro_cluster.value
+  }
   timeouts = {
     create = "120m"
     delete = "120m"
@@ -149,10 +174,10 @@ module "aro_cluster" {
   }
 
   depends_on = [
-    azurerm_role_assignment.role_network1,
+    azurerm_role_assignment.role_network_cluster_sp,
+    azurerm_role_assignment.role_network_aro_rp,
   ]
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -162,6 +187,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
 
+- <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) (~> 2.0)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
@@ -170,12 +197,17 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azuread_application.aro_cluster](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) (resource)
+- [azuread_service_principal.aro_cluster](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) (resource)
+- [azuread_service_principal_password.aro_cluster](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal_password) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_role_assignment.role_network1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.role_network_aro_rp](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_role_assignment.role_network_cluster_sp](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_subnet.main_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_subnet.worker_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [azuread_service_principal.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -195,35 +227,6 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_service_principal_client_id"></a> [service\_principal\_client\_id](#input\_service\_principal\_client\_id)
-
-Description: The client ID of the service principal for the ARO cluster.  
-If not provided, ARO will auto-create a service principal during deployment.  
-Note: Auto-creation requires the deploying identity to have Azure AD permissions.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_service_principal_client_secret"></a> [service\_principal\_client\_secret](#input\_service\_principal\_client\_secret)
-
-Description: The client secret of the service principal for the ARO cluster.  
-Required only if service\_principal\_client\_id is provided.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_service_principal_object_id"></a> [service\_principal\_object\_id](#input\_service\_principal\_object\_id)
-
-Description: The object ID of the service principal for the ARO cluster.  
-If provided, a Network Contributor role assignment will be created on the VNet.  
-If not provided, you must ensure the service principal has the necessary permissions manually.
-
-Type: `string`
-
-Default: `null`
 
 ## Outputs
 

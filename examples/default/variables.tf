@@ -23,9 +23,9 @@ DESCRIPTION
 
   validation {
     condition = var.cluster_service_principal == null || (
-      length(trimspace(var.cluster_service_principal.client_id)) > 0 &&
-      length(trimspace(var.cluster_service_principal.client_secret)) > 0 &&
-      length(trimspace(var.cluster_service_principal.object_id)) > 0
+        length(trimspace(try(var.cluster_service_principal.client_id, ""))) > 0 &&
+        length(trimspace(try(var.cluster_service_principal.client_secret, ""))) > 0 &&
+        length(trimspace(try(var.cluster_service_principal.object_id, ""))) > 0
     )
     error_message = "When supplying cluster_service_principal all object properties must be non-empty strings."
   }

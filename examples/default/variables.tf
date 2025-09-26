@@ -20,7 +20,7 @@ DESCRIPTION
 
 variable "location" {
   type        = string
-  default     = "eastus"
+  default     = "canadacentral"
   description = <<DESCRIPTION
 Azure region to deploy the example resources into. Choose a region with sufficient Azure Red Hat OpenShift capacity.
 

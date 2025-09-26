@@ -8,27 +8,12 @@ If omitted, the example attempts to discover the object ID via the AzureAD provi
 DESCRIPTION
 }
 
-variable "cluster_service_principal" {
-  type = object({
-    client_id     = string
-    client_secret = string
-    object_id     = string
-  })
-  default     = null
+variable "location" {
+  type        = string
+  default     = "centralus"
   description = <<DESCRIPTION
-Optional existing service principal values to use for the Azure Red Hat OpenShift cluster.
-Provide these when your pipeline cannot create Azure AD applications or service principals.
-When omitted, the example will create a new service principal automatically.
+Azure region to deploy the example resources into. Choose a region with sufficient Azure Red Hat OpenShift capacity.
 DESCRIPTION
-
-  validation {
-    condition = var.cluster_service_principal == null || (
-      length(trimspace(var.cluster_service_principal.client_id)) > 0 &&
-      length(trimspace(var.cluster_service_principal.client_secret)) > 0 &&
-      length(trimspace(var.cluster_service_principal.object_id)) > 0
-    )
-    error_message = "When supplying cluster_service_principal all object properties must be non-empty strings."
-  }
 }
 
 variable "enable_telemetry" {

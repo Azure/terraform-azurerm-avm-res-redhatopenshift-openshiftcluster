@@ -2,5 +2,6 @@
   "chat.agent.maxRequests": 500,
   "chat.math.enabled": true,
   "chat.todoListTool.enabled": true,
-  "github.copilot.chat.agent.thinkingTool": true
+  "github.copilot.chat.agent.thinkingTool": true,
+  "chat.mcp.gallery.serviceUrl": "https://1es-mcp.data.eastus.azure-apicenter.ms/workspaces/default/"
 }

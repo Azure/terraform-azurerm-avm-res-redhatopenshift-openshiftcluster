@@ -47,17 +47,15 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
-- [azurerm_redhat_openshift_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/redhat_openshift_cluster) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
+- [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
-- [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
+- [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
+- [modtm_module_source.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -66,9 +64,7 @@ The following input variables are required:
 
 ### <a name="input_api_server_profile"></a> [api\_server\_profile](#input\_api\_server\_profile)
 
-Description: Configuration for the API server profile.
-
-- `visibility` - (Required) Visibility of the API server. Possible values are `Private` and `Public`.
+Description: API server profile configuration.
 
 Type:
 
@@ -80,54 +76,36 @@ object({
 
 ### <a name="input_cluster_profile"></a> [cluster\_profile](#input\_cluster\_profile)
 
-Description: Configuration for the OpenShift cluster profile.
-
-- `domain` - (Required) Domain name for the OpenShift cluster.
-- `version` - (Required) Version of OpenShift to deploy.
-- `fips_enabled` - (Optional) Whether FIPS mode is enabled. Defaults to `false`.
-- `managed_resource_group_name` - (Optional) Name of the managed resource group. If not specified, one will be generated.
-- `pull_secret` - (Optional) Red Hat pull secret for accessing Red Hat container registries.
+Description: Cluster-level settings.
 
 Type:
 
 ```hcl
 object({
-    domain                      = string
-    version                     = string
-    fips_enabled                = optional(bool, false)
-    managed_resource_group_name = optional(string, null)
-    pull_secret                 = optional(string, null)
+    domain                 = string
+    version                = string
+    pull_secret            = optional(string)
+    fips_validated_modules = optional(bool, false)
+    resource_group_id      = optional(string)
+    oidc_issuer            = optional(string)
   })
 ```
 
-### <a name="input_ingress_profile"></a> [ingress\_profile](#input\_ingress\_profile)
+### <a name="input_identity_ids"></a> [identity\_ids](#input\_identity\_ids)
 
-Description: Configuration for the ingress profile.
+Description: List of User Assigned Managed Identity resource IDs to attach to the ARO cluster resource.
 
-- `visibility` - (Required) Visibility of the ingress. Possible values are `Private` and `Public`.
-
-Type:
-
-```hcl
-object({
-    visibility = string
-  })
-```
+Type: `list(string)`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: Azure region where the resource should be deployed.
+Description: Azure region where the cluster is deployed.
 
 Type: `string`
 
 ### <a name="input_main_profile"></a> [main\_profile](#input\_main\_profile)
 
-Description: Configuration for the master node profile.
-
-- `subnet_id` - (Required) The subnet ID for the master nodes.
-- `vm_size` - (Required) The VM size for the master nodes.
-- `disk_encryption_set_id` - (Optional) The disk encryption set ID for master node disks.
-- `encryption_at_host_enabled` - (Optional) Whether encryption at host is enabled for master nodes. Defaults to `false`.
+Description: Control-plane (master) profile configuration.
 
 Type:
 
@@ -135,25 +113,20 @@ Type:
 object({
     subnet_id                  = string
     vm_size                    = string
-    disk_encryption_set_id     = optional(string, null)
     encryption_at_host_enabled = optional(bool, false)
+    disk_encryption_set_id     = optional(string)
   })
 ```
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the Azure Red Hat OpenShift cluster.
+Description: Name of the Azure Red Hat OpenShift cluster.
 
 Type: `string`
 
 ### <a name="input_network_profile"></a> [network\_profile](#input\_network\_profile)
 
-Description: Configuration for the cluster network profile.
-
-- `pod_cidr` - (Required) CIDR block for pod network.
-- `service_cidr` - (Required) CIDR block for service network.
-- `outbound_type` - (Optional) Outbound routing method. Possible values are `Loadbalancer` and `UserDefinedRouting`. Defaults to `Loadbalancer`.
-- `preconfigured_network_security_group_enabled` - (Optional) Whether to use preconfigured network security groups. Defaults to `false`.
+Description: Network configuration for the cluster.
 
 Type:
 
@@ -163,36 +136,31 @@ object({
     service_cidr                                 = string
     outbound_type                                = optional(string, "Loadbalancer")
     preconfigured_network_security_group_enabled = optional(bool, false)
+    lb_managed_outbound_ip_count                 = optional(number)
   })
 ```
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: The resource group where the resources will be deployed.
+Description: Name of the resource group hosting the cluster.
 
 Type: `string`
 
 ### <a name="input_worker_profile"></a> [worker\_profile](#input\_worker\_profile)
 
-Description: Configuration for the worker node profile.
-
-- `subnet_id` - (Required) The subnet ID for the worker nodes.
-- `vm_size` - (Required) The VM size for the worker nodes.
-- `node_count` - (Required) The number of worker nodes.
-- `disk_size_gb` - (Required) The disk size in GB for worker nodes.
-- `disk_encryption_set_id` - (Optional) The disk encryption set ID for worker node disks.
-- `encryption_at_host_enabled` - (Optional) Whether encryption at host is enabled for worker nodes. Defaults to `false`.
+Description: Worker node profile configuration.
 
 Type:
 
 ```hcl
 object({
+    node_count                 = number
     subnet_id                  = string
     vm_size                    = string
-    node_count                 = number
-    disk_size_gb               = number
-    disk_encryption_set_id     = optional(string, null)
+    disk_size_gb               = optional(number, 128)
     encryption_at_host_enabled = optional(bool, false)
+    disk_encryption_set_id     = optional(string)
+    name                       = optional(string, "worker")
   })
 ```
 
@@ -200,59 +168,32 @@ object({
 
 The following input variables are optional (have default values):
 
-### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
+### <a name="input_api_version"></a> [api\_version](#input\_api\_version)
 
-Description: A map describing customer-managed keys to associate with the resource. This includes the following properties:
-- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
-- `key_name` - The name of the key.
-- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
-- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
-  - `resource_id` - The resource ID of the user-assigned identity.
+Description: ARM API version for Microsoft.RedHatOpenShift/openShiftClusters.
 
-Type:
+Type: `string`
 
-```hcl
-object({
-    key_vault_resource_id = string
-    key_name              = string
-    key_version           = optional(string, null)
-    user_assigned_identity = optional(object({
-      resource_id = string
-    }), null)
-  })
-```
-
-Default: `null`
+Default: `"2024-08-12-preview"`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
-Description: A map of diagnostic settings to create on the Azure Red Hat OpenShift cluster. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-- `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
-- `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
-- `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
-- `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
-- `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
-- `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
-- `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
-- `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
-- `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
-- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
+Description: Diagnostic settings to configure on the cluster resource.
 
 Type:
 
 ```hcl
 map(object({
-    name                                     = optional(string, null)
-    log_categories                           = optional(set(string), [])
-    log_groups                               = optional(set(string), ["allLogs"])
-    metric_categories                        = optional(set(string), ["AllMetrics"])
-    log_analytics_destination_type           = optional(string, "Dedicated")
-    workspace_resource_id                    = optional(string, null)
-    storage_account_resource_id              = optional(string, null)
-    event_hub_authorization_rule_resource_id = optional(string, null)
-    event_hub_name                           = optional(string, null)
-    marketplace_partner_resource_id          = optional(string, null)
+    name                                     = optional(string)
+    event_hub_authorization_rule_resource_id = optional(string)
+    event_hub_name                           = optional(string)
+    log_analytics_destination_type           = optional(string)
+    workspace_resource_id                    = optional(string)
+    marketplace_partner_resource_id          = optional(string)
+    storage_account_resource_id              = optional(string)
+    log_categories                           = optional(list(string), [])
+    log_groups                               = optional(list(string), [])
+    metric_categories                        = optional(list(string), [])
   }))
 ```
 
@@ -260,142 +201,75 @@ Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
+Description: This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
 Default: `true`
 
+### <a name="input_ingress_profiles"></a> [ingress\_profiles](#input\_ingress\_profiles)
+
+Description: Ingress profile configurations.
+
+Type:
+
+```hcl
+list(object({
+    name       = string
+    visibility = string
+  }))
+```
+
+Default:
+
+```json
+[
+  {
+    "name": "default",
+    "visibility": "Public"
+  }
+]
+```
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
-
-- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
-- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+Description: Management lock configuration.
 
 Type:
 
 ```hcl
 object({
     kind = string
-    name = optional(string, null)
+    name = optional(string)
   })
 ```
 
 Default: `null`
 
-### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
+### <a name="input_platform_workload_identities"></a> [platform\_workload\_identities](#input\_platform\_workload\_identities)
 
-Description: Controls the Managed Identity configuration on this resource. The following properties can be specified:
+Description: Map of ARO platform operator name to user-assigned managed identity resource ID.
 
-- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
-
-Type:
-
-```hcl
-object({
-    system_assigned            = optional(bool, false)
-    user_assigned_resource_ids = optional(set(string), [])
-  })
-```
+Type: `map(string)`
 
 Default: `{}`
-
-### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
-
-Description: A map of private endpoints to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-Note: ARO clusters typically use their own private connectivity patterns (private API visibility, private ingress) rather than Azure Private Link endpoints to the cluster resource itself. This variable is included for AVM interface consistency.
-
-- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of this resource.
-- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `name` - The name of the IP configuration.
-  - `private_ip_address` - The private IP address of the IP configuration.
-
-Type:
-
-```hcl
-map(object({
-    name = optional(string, null)
-    role_assignments = optional(map(object({
-      role_definition_id_or_name             = string
-      principal_id                           = string
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      condition                              = optional(string, null)
-      condition_version                      = optional(string, null)
-      delegated_managed_identity_resource_id = optional(string, null)
-      principal_type                         = optional(string, null)
-    })), {})
-    lock = optional(object({
-      kind = string
-      name = optional(string, null)
-    }), null)
-    tags                                    = optional(map(string), null)
-    subnet_resource_id                      = string
-    private_dns_zone_group_name             = optional(string, "default")
-    private_dns_zone_resource_ids           = optional(set(string), [])
-    application_security_group_associations = optional(map(string), {})
-    private_service_connection_name         = optional(string, null)
-    network_interface_name                  = optional(string, null)
-    location                                = optional(string, null)
-    resource_group_name                     = optional(string, null)
-    ip_configurations = optional(map(object({
-      name               = string
-      private_ip_address = string
-    })), {})
-  }))
-```
-
-Default: `{}`
-
-### <a name="input_private_endpoints_manage_dns_zone_group"></a> [private\_endpoints\_manage\_dns\_zone\_group](#input\_private\_endpoints\_manage\_dns\_zone\_group)
-
-Description: Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy.
-
-Type: `bool`
-
-Default: `true`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description: A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-- `principal_id` - The ID of the principal to assign the role to.
-- `description` - The description of the role assignment.
-- `skip_service_principal_aad_check` - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
-- `condition` - The condition which will be used to scope the role assignment.
-- `condition_version` - The version of the condition syntax. Valid values are '2.0'.
-
-> Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+Description: Role assignments to create on the cluster resource.
 
 Type:
 
 ```hcl
 map(object({
-    role_definition_id_or_name             = string
     principal_id                           = string
-    description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, false)
-    condition                              = optional(string, null)
-    condition_version                      = optional(string, null)
-    delegated_managed_identity_resource_id = optional(string, null)
-    principal_type                         = optional(string, null)
+    role_definition_id_or_name             = string
+    condition                              = optional(string)
+    condition_version                      = optional(string)
+    delegated_managed_identity_resource_id = optional(string)
+    skip_service_principal_aad_check       = optional(bool)
   }))
 ```
 
@@ -403,12 +277,7 @@ Default: `{}`
 
 ### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
 
-Description: Configuration for the service principal used by the cluster.  
-If not provided, ARO will auto-create a service principal during deployment.  
-Note: Auto-creation requires the deploying identity to have Azure AD permissions.
-
-- `client_id` - (Required) The client ID of the service principal.
-- `client_secret` - (Required) The client secret of the service principal.
+Description: Optional service principal credentials for legacy deployments.
 
 Type:
 
@@ -423,29 +292,24 @@ Default: `null`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: (Optional) Tags of the resource.
+Description: Tags to apply to the cluster resource.
 
 Type: `map(string)`
 
-Default: `null`
+Default: `{}`
 
 ### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
 
-Description: Timeout configuration for the Azure Red Hat OpenShift cluster resource.
-
-- `create` - (Optional) Timeout for creating the cluster. Defaults to 90 minutes.
-- `delete` - (Optional) Timeout for deleting the cluster. Defaults to 90 minutes.
-- `read` - (Optional) Timeout for reading the cluster. Defaults to 5 minutes.
-- `update` - (Optional) Timeout for updating the cluster. Defaults to 90 minutes.
+Description: Custom timeouts for create/read/update/delete operations.
 
 Type:
 
 ```hcl
 object({
-    create = optional(string, null)
-    delete = optional(string, null)
-    read   = optional(string, null)
-    update = optional(string, null)
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
   })
 ```
 
@@ -455,39 +319,33 @@ Default: `null`
 
 The following outputs are exported:
 
-### <a name="output_api_server_ip"></a> [api\_server\_ip](#output\_api\_server\_ip)
-
-Description: The IP address of the API server.
-
 ### <a name="output_api_server_url"></a> [api\_server\_url](#output\_api\_server\_url)
 
-Description: The URL of the API server.
-
-### <a name="output_cluster_resource_group_id"></a> [cluster\_resource\_group\_id](#output\_cluster\_resource\_group\_id)
-
-Description: The resource group ID for the cluster-managed resources.
+Description: Azure Red Hat OpenShift API server URL.
 
 ### <a name="output_console_url"></a> [console\_url](#output\_console\_url)
 
-Description: The URL of the OpenShift web console.
+Description: Azure Red Hat OpenShift console URL.
 
-### <a name="output_ingress_ip"></a> [ingress\_ip](#output\_ingress\_ip)
+### <a name="output_domain"></a> [domain](#output\_domain)
 
-Description: The IP address of the ingress.
+Description: DNS domain suffix for the cluster.
 
-### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
+### <a name="output_id"></a> [id](#output\_id)
 
-Description:   Azure Red Hat OpenShift does not support Azure Private Link endpoints.  
-  Private connectivity is configured through API server and ingress visibility settings.  
-  This output is maintained for AVM interface compliance.
+Description: Resource ID of the ARO cluster.
 
-### <a name="output_resource"></a> [resource](#output\_resource)
+### <a name="output_location"></a> [location](#output\_location)
 
-Description: This is the full output for the Azure Red Hat OpenShift cluster resource.
+Description: n/a
 
-### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+### <a name="output_name"></a> [name](#output\_name)
 
-Description: The resource ID of the Azure Red Hat OpenShift cluster.
+Description: n/a
+
+### <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name)
+
+Description: n/a
 
 ## Modules
 

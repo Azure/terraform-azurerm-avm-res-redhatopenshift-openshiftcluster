@@ -35,7 +35,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.6)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
@@ -90,12 +90,6 @@ object({
     oidc_issuer            = optional(string)
   })
 ```
-
-### <a name="input_identity_ids"></a> [identity\_ids](#input\_identity\_ids)
-
-Description: List of User Assigned Managed Identity resource IDs to attach to the ARO cluster resource.
-
-Type: `list(string)`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -201,13 +195,36 @@ Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_identity"></a> [identity](#input\_identity)
+
+Description: Full managed identity configuration. When omitted, the module assumes a user-assigned identity using identity\_ids.
+
+Type:
+
+```hcl
+object({
+    type                       = string
+    user_assigned_identity_ids = optional(list(string))
+  })
+```
+
+Default: `null`
+
+### <a name="input_identity_ids"></a> [identity\_ids](#input\_identity\_ids)
+
+Description: List of user-assigned managed identity resource IDs to attach when using user-assigned identities.
+
+Type: `list(string)`
+
+Default: `[]`
 
 ### <a name="input_ingress_profiles"></a> [ingress\_profiles](#input\_ingress\_profiles)
 
@@ -255,6 +272,14 @@ Description: Map of ARO platform operator name to user-assigned managed identity
 Type: `map(string)`
 
 Default: `{}`
+
+### <a name="input_platform_workload_identity_upgradeable_to"></a> [platform\_workload\_identity\_upgradeable\_to](#input\_platform\_workload\_identity\_upgradeable\_to)
+
+Description: Optional OpenShift version that the workload identity platform can upgrade to.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -314,6 +339,26 @@ object({
 ```
 
 Default: `null`
+
+### <a name="input_worker_profiles"></a> [worker\_profiles](#input\_worker\_profiles)
+
+Description: Optional list of worker node profile configurations. When set, overrides worker\_profile.
+
+Type:
+
+```hcl
+list(object({
+    node_count                 = number
+    subnet_id                  = string
+    vm_size                    = string
+    disk_size_gb               = optional(number, 128)
+    encryption_at_host_enabled = optional(bool, false)
+    disk_encryption_set_id     = optional(string)
+    name                       = optional(string, "worker")
+  }))
+```
+
+Default: `[]`
 
 ## Outputs
 

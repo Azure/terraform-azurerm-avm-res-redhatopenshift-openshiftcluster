@@ -1,5 +1,4 @@
 locals {
-  fips_flag = var.cluster_profile.fips_validated_modules ? "Enabled" : "Disabled"
   cluster_profile_body = merge(
     {
       domain               = var.cluster_profile.domain
@@ -10,45 +9,6 @@ locals {
     var.cluster_profile.resource_group_id == null ? {} : { resourceGroupId = var.cluster_profile.resource_group_id },
     var.cluster_profile.oidc_issuer == null ? {} : { oidcIssuer = var.cluster_profile.oidc_issuer }
   )
-  ehost_flag = var.main_profile.encryption_at_host_enabled ? "Enabled" : "Disabled"
-  master_profile_body = merge(
-    {
-      vmSize           = var.main_profile.vm_size
-      subnetId         = var.main_profile.subnet_id
-      encryptionAtHost = local.ehost_flag
-    },
-    var.main_profile.disk_encryption_set_id == null ? {} : { diskEncryptionSetId = var.main_profile.disk_encryption_set_id }
-  )
-  nsg_flag = var.network_profile.preconfigured_network_security_group_enabled ? "Enabled" : "Disabled"
-  network_profile_body = merge(
-    {
-      podCidr          = var.network_profile.pod_cidr
-      serviceCidr      = var.network_profile.service_cidr
-      outboundType     = var.network_profile.outbound_type
-      preconfiguredNSG = local.nsg_flag
-    },
-    var.network_profile.lb_managed_outbound_ip_count == null ? {} : {
-      loadBalancerProfile = {
-        managedOutboundIps = {
-          count = var.network_profile.lb_managed_outbound_ip_count
-        }
-      }
-    }
-  )
-  resolved_platform_workload_identities = {
-    for k, v in var.platform_workload_identities : k => { resourceId = v }
-  }
-  platform_workload_identity_profile = (
-    length(local.resolved_platform_workload_identities) == 0
-    && var.platform_workload_identity_upgradeable_to == null
-    ) ? null : merge(
-    length(local.resolved_platform_workload_identities) == 0 ? {} : { platformWorkloadIdentities = local.resolved_platform_workload_identities },
-    var.platform_workload_identity_upgradeable_to == null ? {} : { upgradeableTo = var.platform_workload_identity_upgradeable_to }
-  )
-  service_principal_profile = var.service_principal == null ? null : {
-    clientId     = var.service_principal.client_id
-    clientSecret = var.service_principal.client_secret
-  }
   default_worker_profile = {
     name                       = var.worker_profile.name
     node_count                 = var.worker_profile.node_count
@@ -69,6 +29,53 @@ locals {
       disk_encryption_set_id     = wp.disk_encryption_set_id
     }
   ] : [local.default_worker_profile]
+  ehost_flag = var.main_profile.encryption_at_host_enabled ? "Enabled" : "Disabled"
+  fips_flag  = var.cluster_profile.fips_validated_modules ? "Enabled" : "Disabled"
+  master_profile_body = merge(
+    {
+      vmSize           = var.main_profile.vm_size
+      subnetId         = var.main_profile.subnet_id
+      encryptionAtHost = local.ehost_flag
+    },
+    var.main_profile.disk_encryption_set_id == null ? {} : { diskEncryptionSetId = var.main_profile.disk_encryption_set_id }
+  )
+  network_profile_body = merge(
+    {
+      podCidr          = var.network_profile.pod_cidr
+      serviceCidr      = var.network_profile.service_cidr
+      outboundType     = var.network_profile.outbound_type
+      preconfiguredNSG = local.nsg_flag
+    },
+    var.network_profile.lb_managed_outbound_ip_count == null ? {} : {
+      loadBalancerProfile = {
+        managedOutboundIps = {
+          count = var.network_profile.lb_managed_outbound_ip_count
+        }
+      }
+    }
+  )
+  nsg_flag = var.network_profile.preconfigured_network_security_group_enabled ? "Enabled" : "Disabled"
+  platform_workload_identity_profile = (
+    length(local.resolved_platform_workload_identities) == 0
+    && var.platform_workload_identity_upgradeable_to == null
+    ) ? null : merge(
+    length(local.resolved_platform_workload_identities) == 0 ? {} : { platformWorkloadIdentities = local.resolved_platform_workload_identities },
+    var.platform_workload_identity_upgradeable_to == null ? {} : { upgradeableTo = var.platform_workload_identity_upgradeable_to }
+  )
+  resolved_identity = var.identity != null ? {
+    type         = var.identity.type
+    identity_ids = try(var.identity.user_assigned_identity_ids, [])
+    } : {
+    type         = "UserAssigned"
+    identity_ids = var.identity_ids
+  }
+  resolved_platform_workload_identities = {
+    for k, v in var.platform_workload_identities : k => { resourceId = v }
+  }
+  service_principal_profile = var.service_principal == null ? null : {
+    clientId     = var.service_principal.client_id
+    clientSecret = var.service_principal.client_secret
+  }
   worker_profiles_body = [
     for wp in local.effective_worker_profiles : merge(
       {
@@ -82,13 +89,6 @@ locals {
       wp.disk_encryption_set_id == null ? {} : { diskEncryptionSetId = wp.disk_encryption_set_id }
     )
   ]
-  resolved_identity = var.identity != null ? {
-    type         = var.identity.type
-    identity_ids = try(var.identity.user_assigned_identity_ids, [])
-    } : {
-    type         = "UserAssigned"
-    identity_ids = var.identity_ids
-  }
 }
 
 data "azurerm_resource_group" "rg" {

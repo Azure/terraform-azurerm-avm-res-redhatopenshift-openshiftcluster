@@ -549,7 +549,7 @@ https://docs.microsoft.com/en-us/azure/openshift/supported-resources
 
 Type: `string`
 
-Default: `"eastus"`
+Default: `"canadacentral"`
 
 ## Outputs
 

@@ -6,14 +6,95 @@ variable "location" {
 
 variable "name" {
   type        = string
-  description = "The name of the this resource."
+  description = "The name of the ARO cluster resource. Must be 5-50 chars, lowercase letters, numbers or hyphens, start/end with alphanumeric."
 
+  # Replace placeholder validation with a realistic pattern.
   validation {
-    condition     = can(regex("TODO", var.name))
-    error_message = "The name must be TODO." # TODO remove the example below once complete:
-    #condition     = can(regex("^[a-z0-9]{5,50}$", var.name))
-    #error_message = "The name must be between 5 and 50 characters long and can only contain lowercase letters and numbers."
+    condition     = can(regex("^[a-z0-9](?:[a-z0-9-]{3,48})[a-z0-9]$", var.name))
+    error_message = "Name must be 5-50 chars, lowercase letters, numbers or hyphens; cannot start/end with hyphen."
   }
+}
+
+# -----------------------------------------------------------------------------
+# ARO specific profile objects (missing in template scaffold). Added so module
+# variables referenced in main.tf are defined and consumer example works.
+# -----------------------------------------------------------------------------
+
+variable "api_server_profile" {
+  description = "API server profile configuration: visibility (Public or Private)."
+  type = object({
+    visibility = string
+  })
+}
+
+variable "cluster_profile" {
+  description = "Cluster profile settings: domain, version, optional FIPS, managed RG and pull secret."
+  type = object({
+    domain                      = string
+    version                     = string
+    fips_enabled                = optional(bool, false)
+    managed_resource_group_name = optional(string, null)
+    pull_secret                 = optional(string, null)
+  })
+}
+
+variable "ingress_profile" {
+  description = "Ingress profile configuration: visibility (Public or Private)."
+  type = object({
+    visibility = string
+  })
+}
+
+variable "main_profile" {
+  description = "Master (control plane) profile: subnet id, vm size and optional encryption settings."
+  type = object({
+    subnet_id                  = string
+    vm_size                    = string
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+}
+
+variable "network_profile" {
+  description = "Network profile: pod/service CIDRs, outbound type and optional preconfigured NSG flag."
+  type = object({
+    pod_cidr                                     = string
+    service_cidr                                 = string
+    outbound_type                                = optional(string, null) # Loadbalancer | UserDefinedRouting
+    preconfigured_network_security_group_enabled = optional(bool, false)
+  })
+}
+
+variable "service_principal" {
+  description = "Service principal credentials used by the ARO cluster."
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  sensitive = true
+}
+
+variable "worker_profile" {
+  description = "Worker node pool profile: sizing and encryption options."
+  type = object({
+    subnet_id                  = string
+    vm_size                    = string
+    node_count                 = number
+    disk_size_gb               = number
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+}
+
+variable "timeouts" {
+  description = "Resource operation timeouts for create, read, update, delete (e.g. 120m). Optional."
+  type = object({
+    create = optional(string, null)
+    read   = optional(string, null)
+    update = optional(string, null)
+    delete = optional(string, null)
+  })
+  default = null
 }
 
 # This is required for most resource modules
@@ -42,7 +123,7 @@ A map describing customer-managed keys to associate with the resource. This incl
 - `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
 - `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
   - `resource_id` - The resource ID of the user-assigned identity.
-DESCRIPTION  
+DESCRIPTION
 }
 
 variable "diagnostic_settings" {
@@ -72,7 +153,7 @@ A map of diagnostic settings to create on the Key Vault. The map key is delibera
 - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
 - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
 - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
-DESCRIPTION  
+DESCRIPTION
   nullable    = false
 
   validation {

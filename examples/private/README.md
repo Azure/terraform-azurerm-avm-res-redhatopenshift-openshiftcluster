@@ -44,7 +44,7 @@ provider "azuread" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "0.4.2"
+  version = "0.8.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -287,7 +287,7 @@ Version: 0.4.2
 
 Source: Azure/regions/azurerm
 
-Version: 0.4.2
+Version: 0.8.2
 
 ---
 title: ""

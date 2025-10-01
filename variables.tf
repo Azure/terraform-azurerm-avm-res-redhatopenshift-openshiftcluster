@@ -153,6 +153,7 @@ variable "private_endpoints" {
       condition                              = optional(string, null)
       condition_version                      = optional(string, null)
       delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     lock = optional(object({
       kind = string
@@ -197,6 +198,7 @@ variable "role_assignments" {
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
   }))
   default     = {}
   description = "A map of role assignments to create on this resource."

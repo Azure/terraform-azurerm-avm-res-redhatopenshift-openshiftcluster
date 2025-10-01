@@ -38,7 +38,7 @@ provider "azuread" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "0.3.1"
+  version = "0.4.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -71,7 +71,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.1"
+  version = "0.4.2"
 }
 
 # Short seed + derived ARO identifiers to satisfy name length validation
@@ -274,13 +274,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.3.1
+Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/regions/azurerm
 
-Version: 0.3.1
+Version: 0.4.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

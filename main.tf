@@ -67,4 +67,9 @@ resource "azurerm_role_assignment" "this" {
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
+  role_definition_id                     = startswith(each.value.role_definition_id_or_name, "/") ? each.value.role_definition_id_or_name : null
+  role_definition_name                   = startswith(each.value.role_definition_id_or_name, "/") ? null : each.value.role_definition_id_or_name
+  description                            = each.value.description
+  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+  principal_type                         = each.value.principal_type
 }

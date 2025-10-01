@@ -73,10 +73,10 @@ module "naming" {
 
 # Short seed + derived ARO identifiers to satisfy name length validation
 locals {
-  aro_seed_raw   = module.naming.resource_group.name_unique
-  aro_seed_short = substr(replace(local.aro_seed_raw, "rg-", ""), 0, 12)
-  aro_cluster_name  = "aro-${local.aro_seed_short}"
   aro_cluster_domain = "aro${local.aro_seed_short}"
+  aro_cluster_name   = "aro-${local.aro_seed_short}"
+  aro_seed_raw       = module.naming.resource_group.name_unique
+  aro_seed_short     = substr(replace(local.aro_seed_raw, "rg-", ""), 0, 12)
 }
 
 # Current user/service principal data
@@ -161,7 +161,7 @@ module "aro_cluster" {
   }
   # Cluster configuration
   cluster_profile = {
-  domain  = local.aro_cluster_domain
+    domain  = local.aro_cluster_domain
     version = "4.16.39" # Adjust as needed
   }
   # Ingress configuration
@@ -195,16 +195,15 @@ module "aro_cluster" {
     disk_size_gb = 128
   }
   enable_telemetry = var.enable_telemetry
-
-  depends_on = [
-    azurerm_role_assignment.aro_nw_contributor,
-    azurerm_role_assignment.aro_nw_contributor2,
-  ]
   # Timeouts
   timeouts = {
     create = "120m"
     delete = "120m"
     update = "120m"
   }
-  # Removed depends_on referencing commented resource
+
+  depends_on = [
+    azurerm_role_assignment.aro_nw_contributor,
+    azurerm_role_assignment.aro_nw_contributor2,
+  ]
 }

@@ -1,7 +1,47 @@
+# -----------------------------------------------------------------------------
+# ARO specific profile objects (missing in template scaffold). Added so module
+# variables referenced in main.tf are defined and consumer example works.
+# -----------------------------------------------------------------------------
+
+variable "api_server_profile" {
+  type = object({
+    visibility = string
+  })
+  description = "API server profile configuration: visibility (Public or Private)."
+}
+
+variable "cluster_profile" {
+  type = object({
+    domain                      = string
+    version                     = string
+    fips_enabled                = optional(bool, false)
+    managed_resource_group_name = optional(string, null)
+    pull_secret                 = optional(string, null)
+  })
+  description = "Cluster profile settings: domain, version, optional FIPS, managed RG and pull secret."
+}
+
+variable "ingress_profile" {
+  type = object({
+    visibility = string
+  })
+  description = "Ingress profile configuration: visibility (Public or Private)."
+}
+
 variable "location" {
   type        = string
   description = "Azure region where the resource should be deployed."
   nullable    = false
+}
+
+variable "main_profile" {
+  type = object({
+    subnet_id                  = string
+    vm_size                    = string
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+  description = "Master (control plane) profile: subnet id, vm size and optional encryption settings."
 }
 
 variable "name" {
@@ -15,67 +55,32 @@ variable "name" {
   }
 }
 
-# -----------------------------------------------------------------------------
-# ARO specific profile objects (missing in template scaffold). Added so module
-# variables referenced in main.tf are defined and consumer example works.
-# -----------------------------------------------------------------------------
-
-variable "api_server_profile" {
-  description = "API server profile configuration: visibility (Public or Private)."
-  type = object({
-    visibility = string
-  })
-}
-
-variable "cluster_profile" {
-  description = "Cluster profile settings: domain, version, optional FIPS, managed RG and pull secret."
-  type = object({
-    domain                      = string
-    version                     = string
-    fips_enabled                = optional(bool, false)
-    managed_resource_group_name = optional(string, null)
-    pull_secret                 = optional(string, null)
-  })
-}
-
-variable "ingress_profile" {
-  description = "Ingress profile configuration: visibility (Public or Private)."
-  type = object({
-    visibility = string
-  })
-}
-
-variable "main_profile" {
-  description = "Master (control plane) profile: subnet id, vm size and optional encryption settings."
-  type = object({
-    subnet_id                  = string
-    vm_size                    = string
-    disk_encryption_set_id     = optional(string, null)
-    encryption_at_host_enabled = optional(bool, false)
-  })
-}
-
 variable "network_profile" {
-  description = "Network profile: pod/service CIDRs, outbound type and optional preconfigured NSG flag."
   type = object({
     pod_cidr                                     = string
     service_cidr                                 = string
     outbound_type                                = optional(string, null) # Loadbalancer | UserDefinedRouting
     preconfigured_network_security_group_enabled = optional(bool, false)
   })
+  description = "Network profile: pod/service CIDRs, outbound type and optional preconfigured NSG flag."
+}
+
+# This is required for most resource modules
+variable "resource_group_name" {
+  type        = string
+  description = "The resource group where the resources will be deployed."
 }
 
 variable "service_principal" {
-  description = "Service principal credentials used by the ARO cluster."
   type = object({
     client_id     = string
     client_secret = string
   })
-  sensitive = true
+  description = "Service principal credentials used by the ARO cluster."
+  sensitive   = true
 }
 
 variable "worker_profile" {
-  description = "Worker node pool profile: sizing and encryption options."
   type = object({
     subnet_id                  = string
     vm_size                    = string
@@ -84,23 +89,7 @@ variable "worker_profile" {
     disk_encryption_set_id     = optional(string, null)
     encryption_at_host_enabled = optional(bool, false)
   })
-}
-
-variable "timeouts" {
-  description = "Resource operation timeouts for create, read, update, delete (e.g. 120m). Optional."
-  type = object({
-    create = optional(string, null)
-    read   = optional(string, null)
-    update = optional(string, null)
-    delete = optional(string, null)
-  })
-  default = null
-}
-
-# This is required for most resource modules
-variable "resource_group_name" {
-  type        = string
-  description = "The resource group where the resources will be deployed."
+  description = "Worker node pool profile: sizing and encryption options."
 }
 
 # required AVM interfaces
@@ -312,4 +301,15 @@ variable "tags" {
   type        = map(string)
   default     = null
   description = "(Optional) Tags of the resource."
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string, null)
+    read   = optional(string, null)
+    update = optional(string, null)
+    delete = optional(string, null)
+  })
+  default     = null
+  description = "Resource operation timeouts for create, read, update, delete (e.g. 120m). Optional."
 }

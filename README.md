@@ -39,11 +39,10 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
-- [azurerm_resource_group.TODO](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_redhat_openshift_cluster.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/redhat_openshift_cluster) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
@@ -55,23 +54,123 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_api_server_profile"></a> [api\_server\_profile](#input\_api\_server\_profile)
+
+Description: API server profile configuration: visibility (Public or Private).
+
+Type:
+
+```hcl
+object({
+    visibility = string
+  })
+```
+
+### <a name="input_cluster_profile"></a> [cluster\_profile](#input\_cluster\_profile)
+
+Description: Cluster profile settings: domain, version, optional FIPS, managed RG and pull secret.
+
+Type:
+
+```hcl
+object({
+    domain                      = string
+    version                     = string
+    fips_enabled                = optional(bool, false)
+    managed_resource_group_name = optional(string, null)
+    pull_secret                 = optional(string, null)
+  })
+```
+
+### <a name="input_ingress_profile"></a> [ingress\_profile](#input\_ingress\_profile)
+
+Description: Ingress profile configuration: visibility (Public or Private).
+
+Type:
+
+```hcl
+object({
+    visibility = string
+  })
+```
+
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: Azure region where the resource should be deployed.
 
 Type: `string`
 
+### <a name="input_main_profile"></a> [main\_profile](#input\_main\_profile)
+
+Description: Master (control plane) profile: subnet id, vm size and optional encryption settings.
+
+Type:
+
+```hcl
+object({
+    subnet_id                  = string
+    vm_size                    = string
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+```
+
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the this resource.
+Description: The name of the ARO cluster resource. Must be 5-50 chars, lowercase letters, numbers or hyphens, start/end with alphanumeric.
 
 Type: `string`
+
+### <a name="input_network_profile"></a> [network\_profile](#input\_network\_profile)
+
+Description: Network profile: pod/service CIDRs, outbound type and optional preconfigured NSG flag.
+
+Type:
+
+```hcl
+object({
+    pod_cidr                                     = string
+    service_cidr                                 = string
+    outbound_type                                = optional(string, null) # Loadbalancer | UserDefinedRouting
+    preconfigured_network_security_group_enabled = optional(bool, false)
+  })
+```
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: The resource group where the resources will be deployed.
 
 Type: `string`
+
+### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
+
+Description: Service principal credentials used by the ARO cluster.
+
+Type:
+
+```hcl
+object({
+    client_id     = string
+    client_secret = string
+  })
+```
+
+### <a name="input_worker_profile"></a> [worker\_profile](#input\_worker\_profile)
+
+Description: Worker node pool profile: sizing and encryption options.
+
+Type:
+
+```hcl
+object({
+    subnet_id                  = string
+    vm_size                    = string
+    node_count                 = number
+    disk_size_gb               = number
+    disk_encryption_set_id     = optional(string, null)
+    encryption_at_host_enabled = optional(bool, false)
+  })
+```
 
 ## Optional Inputs
 
@@ -282,6 +381,23 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Resource operation timeouts for create, read, update, delete (e.g. 120m). Optional.
+
+Type:
+
+```hcl
+object({
+    create = optional(string, null)
+    read   = optional(string, null)
+    update = optional(string, null)
+    delete = optional(string, null)
+  })
+```
+
+Default: `null`
+
 ## Outputs
 
 The following outputs are exported:
@@ -292,7 +408,7 @@ Description:   A map of the private endpoints created.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: This is the full output for the resource.
+Description: This is the full output for the Red Hat OpenShift cluster resource.
 
 ## Modules
 

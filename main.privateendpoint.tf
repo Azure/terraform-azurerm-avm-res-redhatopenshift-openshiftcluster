@@ -10,12 +10,12 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   tags                          = each.value.tags
 
   private_service_connection {
-    is_manual_connection           = false
-    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-  # NOTE: Replace with correct ARO private link resource once supported; placeholder uses cluster id.
-  private_connection_resource_id = azurerm_redhat_openshift_cluster.this.id
-  # ARO private endpoint subresource names not finalized in scaffold; update when known.
-  subresource_names              = ["cluster"]
+    is_manual_connection = false
+    name                 = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
+    # NOTE: Replace with correct ARO private link resource once supported; placeholder uses cluster id.
+    private_connection_resource_id = azurerm_redhat_openshift_cluster.this.id
+    # ARO private endpoint subresource names not finalized in scaffold; update when known.
+    subresource_names = ["cluster"]
   }
   dynamic "ip_configuration" {
     for_each = each.value.ip_configurations
@@ -23,8 +23,8 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
     content {
       name               = ip_configuration.value.name
       private_ip_address = ip_configuration.value.private_ip_address
-  member_name        = "cluster"
-  subresource_name   = "cluster"
+      member_name        = "cluster"
+      subresource_name   = "cluster"
     }
   }
   dynamic "private_dns_zone_group" {
@@ -53,8 +53,8 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   private_service_connection {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-  private_connection_resource_id = azurerm_redhat_openshift_cluster.this.id
-  subresource_names              = ["cluster"]
+    private_connection_resource_id = azurerm_redhat_openshift_cluster.this.id
+    subresource_names              = ["cluster"]
   }
   dynamic "ip_configuration" {
     for_each = each.value.ip_configurations
@@ -62,8 +62,8 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
     content {
       name               = ip_configuration.value.name
       private_ip_address = ip_configuration.value.private_ip_address
-  member_name        = "cluster"
-  subresource_name   = "cluster"
+      member_name        = "cluster"
+      subresource_name   = "cluster"
     }
   }
 

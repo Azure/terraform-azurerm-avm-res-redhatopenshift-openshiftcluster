@@ -21,11 +21,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -48,7 +44,7 @@ provider "azuread" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  version = "0.3.1"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -81,7 +77,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.3.1"
 }
 
 # Short seed + derived ARO identifiers to satisfy name length validation
@@ -91,9 +87,6 @@ locals {
   aro_seed_raw       = module.naming.resource_group.name_unique
   aro_seed_short     = substr(replace(local.aro_seed_raw, "rg-", ""), 0, 12)
 }
-
-# Current user/service principal data
-data "azurerm_client_config" "current" {}
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
@@ -143,7 +136,7 @@ resource "azuread_service_principal_password" "aro" {
 }
 
 data "azuread_service_principal" "redhatopenshift" {
-  // This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
+  # This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
   client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
 }
 
@@ -231,9 +224,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) (~> 2.15)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -252,7 +243,6 @@ The following resources are used by this module:
 - [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azuread_service_principal.redhatopenshift](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) (data source)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -291,13 +281,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: 0.3.1
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/regions/azurerm
 
-Version: ~> 0.3
+Version: 0.3.1
 
 ---
 title: ""

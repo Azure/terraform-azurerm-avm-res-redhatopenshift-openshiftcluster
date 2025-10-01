@@ -8,11 +8,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -35,7 +31,7 @@ provider "azuread" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  version = "0.3.1"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -68,7 +64,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.3.1"
 }
 
 # Short seed + derived ARO identifiers to satisfy name length validation
@@ -78,9 +74,6 @@ locals {
   aro_seed_raw       = module.naming.resource_group.name_unique
   aro_seed_short     = substr(replace(local.aro_seed_raw, "rg-", ""), 0, 12)
 }
-
-# Current user/service principal data
-data "azurerm_client_config" "current" {}
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
@@ -129,7 +122,7 @@ resource "azuread_service_principal_password" "aro" {
 }
 
 data "azuread_service_principal" "redhatopenshift" {
-  // This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
+  # This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
   client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
 }
 

@@ -11,3 +11,8 @@ output "resource" {
   description = "This is the full output for the Red Hat OpenShift cluster resource."
   value       = azurerm_redhat_openshift_cluster.this
 }
+
+output "resource_id" {
+  description = "The resource ID of the Red Hat OpenShift cluster."
+  value       = azurerm_redhat_openshift_cluster.this.id
+}

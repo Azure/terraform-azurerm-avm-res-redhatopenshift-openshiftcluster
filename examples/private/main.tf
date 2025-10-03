@@ -8,11 +8,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -35,7 +31,7 @@ provider "azuread" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  version = "0.8.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -68,19 +64,16 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # Short seed + derived ARO identifiers to satisfy name length validation
 locals {
-  aro_seed_raw   = module.naming.resource_group.name_unique
-  aro_seed_short = substr(replace(local.aro_seed_raw, "rg-", ""), 0, 12)
-  aro_cluster_name  = "aro-${local.aro_seed_short}"
   aro_cluster_domain = "aro${local.aro_seed_short}"
+  aro_cluster_name   = "aro-${local.aro_seed_short}"
+  aro_seed_raw       = module.naming.resource_group.name_unique
+  aro_seed_short     = substr(replace(local.aro_seed_raw, "rg-", ""), 0, 12)
 }
-
-# Current user/service principal data
-data "azurerm_client_config" "current" {}
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
@@ -99,21 +92,23 @@ resource "azurerm_virtual_network" "this" {
 
 # Create subnet for master nodes
 resource "azurerm_subnet" "master" {
-  address_prefixes     = ["10.0.0.0/23"]
-  name                 = "master-subnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-  service_endpoints    = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
+  address_prefixes                              = ["10.0.0.0/23"]
+  name                                          = "master-subnet"
+  resource_group_name                           = azurerm_resource_group.this.name
+  virtual_network_name                          = azurerm_virtual_network.this.name
+  private_link_service_network_policies_enabled = false
+  service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
 
 # Create subnet for worker nodes
 resource "azurerm_subnet" "worker" {
   # Avoid overlap with master 10.0.0.0/23; pick next free /24
-  address_prefixes     = ["10.0.2.0/24"]
-  name                 = "worker-subnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-  service_endpoints    = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
+  address_prefixes                              = ["10.0.2.0/24"]
+  name                                          = "worker-subnet"
+  resource_group_name                           = azurerm_resource_group.this.name
+  virtual_network_name                          = azurerm_virtual_network.this.name
+  private_link_service_network_policies_enabled = false
+  service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
 
 ## Create application for service principal (was commented out)
@@ -130,7 +125,7 @@ resource "azuread_service_principal_password" "aro" {
 }
 
 data "azuread_service_principal" "redhatopenshift" {
-  // This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
+  # This is the Azure Red Hat OpenShift RP service principal id, do NOT delete it
   client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
 }
 
@@ -161,7 +156,7 @@ module "aro_cluster" {
   }
   # Cluster configuration
   cluster_profile = {
-  domain  = local.aro_cluster_domain
+    domain  = local.aro_cluster_domain
     version = "4.16.39" # Adjust as needed
   }
   # Ingress configuration
@@ -195,16 +190,15 @@ module "aro_cluster" {
     disk_size_gb = 128
   }
   enable_telemetry = var.enable_telemetry
-
-  depends_on = [
-    azurerm_role_assignment.aro_nw_contributor,
-    azurerm_role_assignment.aro_nw_contributor2,
-  ]
   # Timeouts
   timeouts = {
     create = "120m"
     delete = "120m"
     update = "120m"
   }
-  # Removed depends_on referencing commented resource
+
+  depends_on = [
+    azurerm_role_assignment.aro_nw_contributor,
+    azurerm_role_assignment.aro_nw_contributor2,
+  ]
 }

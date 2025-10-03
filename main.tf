@@ -16,7 +16,6 @@ locals {
     local.managed_resource_group_name,
   )
   managed_resource_group_name = length(local.requested_managed_resource_group_name) > 0 ? local.requested_managed_resource_group_name : format("rg-%s", var.name)
-  platform_workload_identity_profile_enabled = length(var.platform_workload_identities) > 0
   platform_workload_identity_profile = local.platform_workload_identity_profile_enabled ? {
     platformWorkloadIdentities = {
       for name, identity in var.platform_workload_identities : name => merge(
@@ -29,6 +28,7 @@ locals {
       )
     }
   } : {}
+  platform_workload_identity_profile_enabled = length(var.platform_workload_identities) > 0
   requested_managed_resource_group_name      = try(trimspace(coalesce(var.cluster_profile.managed_resource_group_name, "")), "")
   resource_group_id = format(
     "/subscriptions/%s/resourceGroups/%s",

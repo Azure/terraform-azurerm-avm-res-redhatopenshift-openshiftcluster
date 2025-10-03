@@ -1,3 +1,9 @@
+variable "aro_rp_client_id" {
+  type        = string
+  default     = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+  description = "Azure Red Hat OpenShift resource provider service principal client ID"
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true

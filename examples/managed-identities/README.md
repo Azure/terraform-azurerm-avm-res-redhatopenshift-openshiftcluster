@@ -36,9 +36,10 @@ provider "azuread" {}
 
 data "azurerm_client_config" "current" {}
 
+
 data "azuread_service_principal" "aro_rp" {
   # Azure Red Hat OpenShift resource provider service principal
-  client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+  client_id = var.aro_rp_client_id
 }
 
 ## Section to provide a random Azure region for the resource group
@@ -332,10 +333,18 @@ No required inputs.
 
 The following input variables are optional (have default values):
 
+### <a name="input_aro_rp_client_id"></a> [aro\_rp\_client\_id](#input\_aro\_rp\_client\_id)
+
+Description: Azure Red Hat OpenShift resource provider service principal client ID
+
+Type: `string`
+
+Default: `"f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`

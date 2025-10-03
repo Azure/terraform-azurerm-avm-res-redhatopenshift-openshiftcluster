@@ -309,7 +309,9 @@ Default: `{}`
 
 ### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
 
-Description: Service principal credentials used by the ARO cluster. Provide when deploying with a service principal.
+Description: Service principal credentials used by the ARO cluster. This variable is now optional and defaults to null.  
+If you previously relied on this being required, update your configuration to explicitly set service\_principal if needed.  
+For migration guidance, see the module documentation.
 
 Type:
 

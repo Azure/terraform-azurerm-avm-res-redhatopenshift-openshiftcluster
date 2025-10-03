@@ -220,7 +220,11 @@ variable "service_principal" {
     client_secret = string
   })
   default     = null
-  description = "Service principal credentials used by the ARO cluster. Provide when deploying with a service principal."
+  description = <<DESCRIPTION
+Service principal credentials used by the ARO cluster. This variable is now optional and defaults to null.
+If you previously relied on this being required, update your configuration to explicitly set service_principal if needed.
+For migration guidance, see the module documentation.
+DESCRIPTION
   sensitive   = true
 }
 

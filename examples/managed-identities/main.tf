@@ -29,9 +29,15 @@ provider "azuread" {}
 
 data "azurerm_client_config" "current" {}
 
+variable "aro_rp_client_id" {
+  description = "Azure Red Hat OpenShift resource provider service principal client ID"
+  type        = string
+  default     = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+}
+
 data "azuread_service_principal" "aro_rp" {
   # Azure Red Hat OpenShift resource provider service principal
-  client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
+  client_id = var.aro_rp_client_id
 }
 
 ## Section to provide a random Azure region for the resource group

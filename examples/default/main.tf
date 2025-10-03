@@ -176,11 +176,6 @@ module "aro_cluster" {
     service_cidr = "172.30.0.0/16"
   }
   resource_group_name = azurerm_resource_group.this.name
-  # Service principal configuration
-  service_principal = {
-    client_id     = azuread_application.aro.client_id
-    client_secret = azuread_service_principal_password.aro.value
-  }
   # Worker node configuration
   worker_profile = {
     subnet_id    = azurerm_subnet.worker.id
@@ -189,6 +184,11 @@ module "aro_cluster" {
     disk_size_gb = 128
   }
   enable_telemetry = var.enable_telemetry
+  # Service principal configuration
+  service_principal = {
+    client_id     = azuread_application.aro.client_id
+    client_secret = azuread_service_principal_password.aro.value
+  }
   # Timeouts
   timeouts = {
     create = "120m"

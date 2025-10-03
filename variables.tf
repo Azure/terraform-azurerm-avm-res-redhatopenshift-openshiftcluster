@@ -71,15 +71,6 @@ variable "resource_group_name" {
   description = "The resource group where the resources will be deployed."
 }
 
-variable "service_principal" {
-  type = object({
-    client_id     = string
-    client_secret = string
-  })
-  description = "Service principal credentials used by the ARO cluster."
-  sensitive   = true
-}
-
 variable "worker_profile" {
   type = object({
     subnet_id                  = string
@@ -138,6 +129,24 @@ Controls the Managed Identity configuration on this resource. The following prop
 
 - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
 - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "platform_workload_identities" {
+  type = map(object({
+    resource_id                    = string
+    federated_identity_client_id   = optional(string, null)
+    federated_service_account_name = optional(string, null)
+    federated_service_account_ns   = optional(string, null)
+  }))
+  default     = {}
+  description = <<DESCRIPTION
+Defines the platform workload managed identities associated with the cluster. Keys must match the operator names expected by Azure Red Hat OpenShift (for example `cloud-controller-manager`).
+- `resource_id` - (Required) The resource ID of the user-assigned managed identity.
+- `federated_identity_client_id` - (Optional) Overrides the federated credential client ID associated with the workload identity when required.
+- `federated_service_account_name` - (Optional) Future-proof field to describe the service account name linked to the identity (not sent to the API).
+- `federated_service_account_ns` - (Optional) Future-proof field to describe the namespace of the service account linked to the identity (not sent to the API).
 DESCRIPTION
   nullable    = false
 }
@@ -203,6 +212,16 @@ variable "role_assignments" {
   default     = {}
   description = "A map of role assignments to create on this resource."
   nullable    = false
+}
+
+variable "service_principal" {
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  default     = null
+  description = "Service principal credentials used by the ARO cluster. Provide when deploying with a service principal."
+  sensitive   = true
 }
 
 # tflint-ignore: terraform_unused_declarations

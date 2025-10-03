@@ -18,7 +18,7 @@ variable "cluster_profile" {
     managed_resource_group_name = optional(string, null)
     pull_secret                 = optional(string, null)
   })
-  description = "Cluster profile settings: domain, version, optional FIPS, managed RG and pull secret."
+  description = "Cluster profile settings: domain, version, optional FIPS, managed RG and pull secret. When `managed_resource_group_name` is omitted the module derives `rg-<var.name>` and links the cluster to that managed resource group."
 }
 
 variable "ingress_profile" {

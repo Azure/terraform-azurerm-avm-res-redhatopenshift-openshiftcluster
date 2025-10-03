@@ -13,7 +13,7 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
     is_manual_connection = false
     name                 = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
     # NOTE: Replace with correct ARO private link resource once supported; placeholder uses cluster id.
-    private_connection_resource_id = azurerm_redhat_openshift_cluster.this.id
+    private_connection_resource_id = azapi_resource.this.id
     # ARO private endpoint subresource names not finalized in scaffold; update when known.
     subresource_names = ["cluster"]
   }
@@ -53,7 +53,7 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   private_service_connection {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azurerm_redhat_openshift_cluster.this.id
+    private_connection_resource_id = azapi_resource.this.id
     subresource_names              = ["cluster"]
   }
   dynamic "ip_configuration" {

@@ -9,10 +9,10 @@ output "private_endpoints" {
 # https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tffr2---category-outputs---additional-terraform-outputs
 output "resource" {
   description = "This is the full output for the Red Hat OpenShift cluster resource."
-  value       = azurerm_redhat_openshift_cluster.this
+  value       = azapi_resource.this.output
 }
 
 output "resource_id" {
   description = "The resource ID of the Red Hat OpenShift cluster."
-  value       = azurerm_redhat_openshift_cluster.this.id
+  value       = azapi_resource.this.id
 }

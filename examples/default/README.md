@@ -98,21 +98,23 @@ resource "azurerm_virtual_network" "this" {
 
 # Create subnet for master nodes
 resource "azurerm_subnet" "master" {
-  address_prefixes     = ["10.0.0.0/23"]
-  name                 = "master-subnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-  service_endpoints    = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
+  address_prefixes                              = ["10.0.0.0/23"]
+  name                                          = "master-subnet"
+  resource_group_name                           = azurerm_resource_group.this.name
+  virtual_network_name                          = azurerm_virtual_network.this.name
+  private_link_service_network_policies_enabled = false
+  service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
 
 # Create subnet for worker nodes
 resource "azurerm_subnet" "worker" {
   # Avoid overlap with master 10.0.0.0/23; pick next free /24
-  address_prefixes     = ["10.0.2.0/24"]
-  name                 = "worker-subnet"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
-  service_endpoints    = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
+  address_prefixes                              = ["10.0.2.0/24"]
+  name                                          = "worker-subnet"
+  resource_group_name                           = azurerm_resource_group.this.name
+  virtual_network_name                          = azurerm_virtual_network.this.name
+  private_link_service_network_policies_enabled = false
+  service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
 
 ## Create application for service principal (was commented out)
@@ -202,8 +204,8 @@ module "aro_cluster" {
   }
 
   depends_on = [
-    "azurerm_role_assignment.aro_nw_contributor",
-    "azurerm_role_assignment.aro_nw_contributor2",
+    azurerm_role_assignment.aro_nw_contributor,
+    azurerm_role_assignment.aro_nw_contributor2,
   ]
 }
 ```

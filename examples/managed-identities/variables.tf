@@ -13,3 +13,9 @@ For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
+
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = "Optional subscription id to pass into the module for deterministic planning. If null, the example will attempt to use the local azurerm client config."
+}

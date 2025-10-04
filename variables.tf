@@ -228,6 +228,12 @@ DESCRIPTION
   sensitive   = true
 }
 
+variable "subscription_id" {
+  type        = string
+  default     = null
+  description = "Optional subscription id to use for derived resource ids. When set, avoids reading subscription id during apply which can cause replacement drift."
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)

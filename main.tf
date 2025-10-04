@@ -12,7 +12,7 @@ locals {
   }, var.managed_identities)
   managed_resource_group_id = format(
     "/subscriptions/%s/resourcegroups/%s",
-    data.azapi_client_config.current.subscription_id,
+    coalesce(var.subscription_id, data.azapi_client_config.current.subscription_id),
     local.managed_resource_group_name,
   )
   managed_resource_group_name = length(local.requested_managed_resource_group_name) > 0 ? local.requested_managed_resource_group_name : format("rg-%s", var.name)
@@ -32,7 +32,7 @@ locals {
   requested_managed_resource_group_name      = try(trimspace(coalesce(var.cluster_profile.managed_resource_group_name, "")), "")
   resource_group_id = format(
     "/subscriptions/%s/resourceGroups/%s",
-    data.azapi_client_config.current.subscription_id,
+    coalesce(var.subscription_id, data.azapi_client_config.current.subscription_id),
     var.resource_group_name,
   )
 }
@@ -84,12 +84,12 @@ resource "azapi_resource" "this" {
         var.worker_profile.disk_encryption_set_id != null ? { diskEncryptionSetId = var.worker_profile.disk_encryption_set_id } : {},
       )]
       },
-      can(var.service_principal) ? {
+      var.service_principal == null ? {} : {
         servicePrincipalProfile = {
           clientId     = var.service_principal.client_id
           clientSecret = var.service_principal.client_secret
         }
-      } : {},
+      },
       local.platform_workload_identity_profile_enabled ? {
         platformWorkloadIdentityProfile = local.platform_workload_identity_profile
       } : {}

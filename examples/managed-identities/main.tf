@@ -273,6 +273,10 @@ module "aro_cluster" {
       resource_id = identity.id
     }
   }
+  # Provide subscription id to the module so derived subscription-scoped
+  # resource ids are deterministic at plan time and avoid replacement drift.
+  # Allow passing a subscription id into the example for deterministic planning
+  subscription_id = coalesce(var.subscription_id, data.azurerm_client_config.current.subscription_id)
   timeouts = {
     create = "120m"
     delete = "120m"

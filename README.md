@@ -324,6 +324,14 @@ object({
 
 Default: `null`
 
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: Optional subscription id to use for derived resource ids. When set, avoids reading subscription id during apply which can cause replacement drift.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.

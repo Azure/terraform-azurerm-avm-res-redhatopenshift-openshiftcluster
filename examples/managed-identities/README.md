@@ -280,6 +280,10 @@ module "aro_cluster" {
       resource_id = identity.id
     }
   }
+  # Provide subscription id to the module so derived subscription-scoped
+  # resource ids are deterministic at plan time and avoid replacement drift.
+  # Allow passing a subscription id into the example for deterministic planning
+  subscription_id = coalesce(var.subscription_id, data.azurerm_client_config.current.subscription_id)
   timeouts = {
     create = "120m"
     delete = "120m"
@@ -350,6 +354,14 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: Optional subscription id to pass into the module for deterministic planning. If null, the example will attempt to use the local azurerm client config.
+
+Type: `string`
+
+Default: `null`
 
 ## Outputs
 

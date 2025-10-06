@@ -143,19 +143,6 @@ Description: The resource group where the resources will be deployed.
 
 Type: `string`
 
-### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
-
-Description: Service principal credentials used by the ARO cluster.
-
-Type:
-
-```hcl
-object({
-    client_id     = string
-    client_secret = string
-  })
-```
-
 ### <a name="input_worker_profile"></a> [worker\_profile](#input\_worker\_profile)
 
 Description: Worker node pool profile: sizing and encryption options.
@@ -229,6 +216,27 @@ object({
 
 Default: `{}`
 
+### <a name="input_platform_workload_identities"></a> [platform\_workload\_identities](#input\_platform\_workload\_identities)
+
+Description: Defines the platform workload managed identities associated with the cluster. Keys must match the operator names expected by Azure Red Hat OpenShift (for example `cloud-controller-manager`).
+- `resource_id` - (Required) The resource ID of the user-assigned managed identity.
+- `federated_identity_client_id` - (Optional) Overrides the federated credential client ID associated with the workload identity when required.
+- `federated_service_account_name` - (Optional) Future-proof field to describe the service account name linked to the identity (not sent to the API).
+- `federated_service_account_ns` - (Optional) Future-proof field to describe the namespace of the service account linked to the identity (not sent to the API).
+
+Type:
+
+```hcl
+map(object({
+    resource_id                    = string
+    federated_identity_client_id   = optional(string, null)
+    federated_service_account_name = optional(string, null)
+    federated_service_account_ns   = optional(string, null)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
 Description: A map of private endpoints to create on this resource.
@@ -298,6 +306,31 @@ map(object({
 ```
 
 Default: `{}`
+
+### <a name="input_service_principal"></a> [service\_principal](#input\_service\_principal)
+
+Description: Service principal credentials used by the ARO cluster. This variable is now optional and defaults to null.  
+If you previously relied on this being required, update your configuration to explicitly set service\_principal if needed.  
+For migration guidance, see the module documentation.
+
+Type:
+
+```hcl
+object({
+    client_id     = string
+    client_secret = string
+  })
+```
+
+Default: `null`
+
+### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
+
+Description: Optional subscription id to use for derived resource ids. When set, avoids reading subscription id during apply which can cause replacement drift.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

@@ -12,14 +12,27 @@ locals {
   }, var.managed_identities)
   managed_resource_group_id = format(
     "/subscriptions/%s/resourcegroups/%s",
-    data.azapi_client_config.current.subscription_id,
+    coalesce(var.subscription_id, data.azapi_client_config.current.subscription_id),
     local.managed_resource_group_name,
   )
-  managed_resource_group_name           = length(local.requested_managed_resource_group_name) > 0 ? local.requested_managed_resource_group_name : format("rg-%s", var.name)
-  requested_managed_resource_group_name = try(trimspace(coalesce(var.cluster_profile.managed_resource_group_name, "")), "")
+  managed_resource_group_name = length(local.requested_managed_resource_group_name) > 0 ? local.requested_managed_resource_group_name : format("rg-%s", var.name)
+  platform_workload_identity_profile = local.platform_workload_identity_profile_enabled ? {
+    platformWorkloadIdentities = {
+      for name, identity in var.platform_workload_identities : name => merge(
+        {
+          resourceId = identity.resource_id
+        },
+        identity.federated_identity_client_id == null ? {} : {
+          federatedIdentityClientId = identity.federated_identity_client_id
+        }
+      )
+    }
+  } : {}
+  platform_workload_identity_profile_enabled = length(var.platform_workload_identities) > 0
+  requested_managed_resource_group_name      = try(trimspace(coalesce(var.cluster_profile.managed_resource_group_name, "")), "")
   resource_group_id = format(
     "/subscriptions/%s/resourceGroups/%s",
-    data.azapi_client_config.current.subscription_id,
+    coalesce(var.subscription_id, data.azapi_client_config.current.subscription_id),
     var.resource_group_name,
   )
 }
@@ -30,7 +43,7 @@ resource "azapi_resource" "this" {
   parent_id = local.resource_group_id
   type      = "Microsoft.RedHatOpenShift/openShiftClusters@2024-08-12-preview"
   body = {
-    properties = {
+    properties = merge({
       apiserverProfile = {
         visibility = var.api_server_profile.visibility
       }
@@ -58,11 +71,8 @@ resource "azapi_resource" "this" {
         serviceCidr      = var.network_profile.service_cidr
         preconfiguredNSG = var.network_profile.preconfigured_network_security_group_enabled ? "Enabled" : "Disabled"
         },
+        var.network_profile.outbound_type != null ? { outboundType = var.network_profile.outbound_type } : {},
       )
-      servicePrincipalProfile = {
-        clientId     = var.service_principal.client_id
-        clientSecret = var.service_principal.client_secret
-      }
       workerProfiles = [merge({
         name             = "worker"
         subnetId         = var.worker_profile.subnet_id
@@ -73,7 +83,17 @@ resource "azapi_resource" "this" {
         },
         var.worker_profile.disk_encryption_set_id != null ? { diskEncryptionSetId = var.worker_profile.disk_encryption_set_id } : {},
       )]
-    }
+      },
+      var.service_principal == null ? {} : {
+        servicePrincipalProfile = {
+          clientId     = var.service_principal.client_id
+          clientSecret = var.service_principal.client_secret
+        }
+      },
+      local.platform_workload_identity_profile_enabled ? {
+        platformWorkloadIdentityProfile = local.platform_workload_identity_profile
+      } : {}
+    )
   }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

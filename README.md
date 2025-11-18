@@ -57,7 +57,7 @@ The following input variables are required:
 
 ### <a name="input_api_server_profile"></a> [api\_server\_profile](#input\_api\_server\_profile)
 
-Description: API server profile configuration: visibility (Public or Private).
+Description: API server profile configuration: visibility (Public or Private) (test).
 
 Type:
 

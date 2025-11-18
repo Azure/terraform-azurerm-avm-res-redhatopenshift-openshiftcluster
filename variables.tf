@@ -7,7 +7,7 @@ variable "api_server_profile" {
   type = object({
     visibility = string
   })
-  description = "API server profile configuration: visibility (Public or Private)."
+  description = "API server profile configuration: visibility (Public or Private) (test)."
 }
 
 variable "cluster_profile" {

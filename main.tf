@@ -109,6 +109,7 @@ resource "azapi_resource" "this" {
       identity_ids = length(local.managed_identities_defaults.user_assigned_resource_ids) > 0 ? local.managed_identities_defaults.user_assigned_resource_ids : null
     }
   }
+
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
 

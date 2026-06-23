@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 2.15"
+      version = "~> 3.8"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -64,7 +64,7 @@ locals {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 # Short seed + derived ARO identifiers to satisfy name length validation

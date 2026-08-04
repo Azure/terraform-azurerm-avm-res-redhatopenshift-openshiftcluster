@@ -15,7 +15,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.0, < 6.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -25,6 +25,7 @@ terraform {
 }
 
 provider "azurerm" {
+  resource_providers_to_register = ["Microsoft.ManagedIdentity", "Microsoft.Network", "Microsoft.RedHatOpenShift"]
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -307,7 +308,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) (~> 3.8)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 4.0, < 6.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

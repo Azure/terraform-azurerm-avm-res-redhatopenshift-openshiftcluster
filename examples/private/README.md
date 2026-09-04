@@ -67,6 +67,7 @@ locals {
     ], region.display_name)
   ]
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -100,21 +101,21 @@ resource "azurerm_virtual_network" "this" {
 
 # Create subnet for master nodes
 resource "azurerm_subnet" "master" {
-  address_prefixes                              = ["10.0.0.0/23"]
   name                                          = "master-subnet"
   resource_group_name                           = azurerm_resource_group.this.name
   virtual_network_name                          = azurerm_virtual_network.this.name
+  address_prefixes                              = ["10.0.0.0/23"]
   private_link_service_network_policies_enabled = false
   service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
 
 # Create subnet for worker nodes
 resource "azurerm_subnet" "worker" {
+  name                 = "worker-subnet"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
   # Avoid overlap with master 10.0.0.0/23; pick next free /24
   address_prefixes                              = ["10.0.2.0/24"]
-  name                                          = "worker-subnet"
-  resource_group_name                           = azurerm_resource_group.this.name
-  virtual_network_name                          = azurerm_virtual_network.this.name
   private_link_service_network_policies_enabled = false
   service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
@@ -137,7 +138,6 @@ data "azuread_service_principal" "redhatopenshift" {
   client_id = "f1dd0a37-89c6-4e07-bcd1-ffd3d43d8875"
 }
 
-
 # Assign required permissions to the service principal
 
 resource "azurerm_role_assignment" "aro_nw_contributor" {
@@ -151,8 +151,6 @@ resource "azurerm_role_assignment" "aro_nw_contributor2" {
   scope                = azurerm_virtual_network.this.id
   role_definition_name = "Network Contributor"
 }
-
-
 
 # This is the module call
 module "aro_cluster" {

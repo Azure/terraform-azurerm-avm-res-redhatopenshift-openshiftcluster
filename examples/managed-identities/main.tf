@@ -30,7 +30,6 @@ provider "azuread" {}
 
 data "azurerm_client_config" "current" {}
 
-
 data "azuread_service_principal" "aro_rp" {
   # Azure Red Hat OpenShift resource provider service principal
   client_id = var.aro_rp_client_id
@@ -125,6 +124,7 @@ locals {
     }
   }
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -157,20 +157,20 @@ resource "azurerm_virtual_network" "this" {
 
 # Create subnet for master nodes
 resource "azurerm_subnet" "master" {
-  address_prefixes                              = ["10.0.0.0/23"]
   name                                          = "master-subnet"
   resource_group_name                           = azurerm_resource_group.this.name
   virtual_network_name                          = azurerm_virtual_network.this.name
+  address_prefixes                              = ["10.0.0.0/23"]
   private_link_service_network_policies_enabled = false
   service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }
 
 # Create subnet for worker nodes
 resource "azurerm_subnet" "worker" {
-  address_prefixes                              = ["10.0.2.0/24"]
   name                                          = "worker-subnet"
   resource_group_name                           = azurerm_resource_group.this.name
   virtual_network_name                          = azurerm_virtual_network.this.name
+  address_prefixes                              = ["10.0.2.0/24"]
   private_link_service_network_policies_enabled = false
   service_endpoints                             = ["Microsoft.Storage", "Microsoft.ContainerRegistry"]
 }

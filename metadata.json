@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "OpenShift Cluster",
+  "moduleDescription": "AVM Resource Module for OpenShift Cluster",
+  "canonicalType": "Microsoft.RedHatOpenShift/openShiftClusters",
+  "owners": [
+    "ethanjenkins1",
+    "puneetdevadiga"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.res.8f98c34"
+}

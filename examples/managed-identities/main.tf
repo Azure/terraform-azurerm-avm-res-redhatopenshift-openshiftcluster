@@ -263,7 +263,7 @@ module "aro_cluster" {
     node_count   = 3
     disk_size_gb = 128
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   managed_identities = {
     user_assigned_resource_ids = toset([
       azurerm_user_assigned_identity.cluster.id

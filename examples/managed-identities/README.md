@@ -354,7 +354,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
 

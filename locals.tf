@@ -1,4 +1,8 @@
 locals {
+  private_endpoint_ids = merge(
+    { for key, endpoint in azurerm_private_endpoint.this_managed_dns_zone_groups : key => endpoint.id },
+    { for key, endpoint in azurerm_private_endpoint.this_unmanaged_dns_zone_groups : key => endpoint.id },
+  )
   # Private endpoint application security group associations.
   # We merge the nested maps from private endpoints and application security group associations into a single map.
   private_endpoint_application_security_group_associations = { for assoc in flatten([

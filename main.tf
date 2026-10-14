@@ -41,7 +41,7 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = var.name
   parent_id = local.resource_group_id
-  type      = "Microsoft.RedHatOpenShift/openShiftClusters@2024-08-12-preview"
+  type      = var.resource_types.redhatopenshift_open_shift_clusters
   body = {
     properties = merge({
       apiserverProfile = {
@@ -95,7 +95,10 @@ resource "azapi_resource" "this" {
       } : {}
     )
   }
-  tags = var.tags
+  ignore_body_changes    = length(var.ignore_body_changes.redhatopenshift_open_shift_clusters) > 0 ? var.ignore_body_changes.redhatopenshift_open_shift_clusters : null
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
 
   dynamic "identity" {
     for_each = local.identity_type == null ? [] : [local.identity_type]

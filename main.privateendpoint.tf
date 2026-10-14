@@ -1,6 +1,5 @@
-# TODO remove this code & var.private_endpoints if private link is not support.  Note it must be included in this module if it is supported.
 resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
-  for_each = var.private_endpoints
+  for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
 
   location                      = each.value.location != null ? each.value.location : var.location
   name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
@@ -10,12 +9,10 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   tags                          = each.value.tags
 
   private_service_connection {
-    is_manual_connection = false
-    name                 = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    # NOTE: Replace with correct ARO private link resource once supported; placeholder uses cluster id.
+    is_manual_connection           = false
+    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
     private_connection_resource_id = azapi_resource.this.id
-    # ARO private endpoint subresource names not finalized in scaffold; update when known.
-    subresource_names = ["cluster"]
+    subresource_names              = [coalesce(each.value.subresource_name, "cluster")]
   }
 
   dynamic "ip_configuration" {
@@ -24,8 +21,8 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
     content {
       name               = ip_configuration.value.name
       private_ip_address = ip_configuration.value.private_ip_address
-      member_name        = "cluster"
-      subresource_name   = "cluster"
+      member_name        = coalesce(ip_configuration.value.member_name, each.value.subresource_name, "cluster")
+      subresource_name   = coalesce(each.value.subresource_name, "cluster")
     }
   }
 
@@ -56,7 +53,7 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
     is_manual_connection           = false
     name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
     private_connection_resource_id = azapi_resource.this.id
-    subresource_names              = ["cluster"]
+    subresource_names              = [coalesce(each.value.subresource_name, "cluster")]
   }
 
   dynamic "ip_configuration" {
@@ -65,8 +62,8 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
     content {
       name               = ip_configuration.value.name
       private_ip_address = ip_configuration.value.private_ip_address
-      member_name        = "cluster"
-      subresource_name   = "cluster"
+      member_name        = coalesce(ip_configuration.value.member_name, each.value.subresource_name, "cluster")
+      subresource_name   = coalesce(each.value.subresource_name, "cluster")
     }
   }
 
@@ -80,4 +77,65 @@ resource "azurerm_private_endpoint_application_security_group_association" "this
 
   application_security_group_id = each.value.asg_resource_id
   private_endpoint_id           = var.private_endpoints_manage_dns_zone_group ? azurerm_private_endpoint.this_managed_dns_zone_groups[each.value.pe_key].id : azurerm_private_endpoint.this_unmanaged_dns_zone_groups[each.value.pe_key].id
+}
+
+module "avm_interfaces" {
+  source  = "Azure/avm-utl-interfaces/azure"
+  version = "0.6.0"
+
+  enable_telemetry                 = var.enable_telemetry
+  private_endpoints                = var.private_endpoints
+  private_endpoints_scope          = azapi_resource.this.id
+  role_assignment_definition_scope = local.resource_group_id
+}
+
+resource "azapi_resource" "private_endpoint_role_assignments" {
+  for_each = module.avm_interfaces.role_assignments_private_endpoint_azapi
+
+  name                   = each.value.name
+  parent_id              = local.private_endpoint_ids[each.value.pe_key]
+  type                   = var.resource_types.authorization_role_assignments
+  body                   = each.value.body
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
+}
+
+resource "azapi_resource" "private_endpoint_locks" {
+  for_each = module.avm_interfaces.lock_private_endpoint_azapi
+
+  name      = coalesce(each.value.name, "lock-${var.private_endpoints[each.key].lock.kind}")
+  parent_id = local.private_endpoint_ids[each.value.pe_key]
+  type      = var.resource_types.authorization_locks
+  body = {
+    properties = merge(
+      each.value.body.properties,
+      var.private_endpoints[each.key].lock.notes == null ? {} : { notes = var.private_endpoints[each.key].lock.notes },
+    )
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_locks) > 0 ? var.ignore_body_changes.authorization_locks : null
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
+
+  depends_on = [azapi_resource.private_endpoint_role_assignments, azurerm_private_endpoint_application_security_group_association.this]
 }

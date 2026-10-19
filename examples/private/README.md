@@ -9,6 +9,10 @@ terraform {
   required_version = "~> 1.5"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
+    }
     azuread = {
       source  = "hashicorp/azuread"
       version = "~> 3.8"
@@ -72,8 +76,8 @@ locals {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.4"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # Short seed + derived ARO identifiers to satisfy name length validation
@@ -155,6 +159,9 @@ resource "azurerm_role_assignment" "aro_nw_contributor2" {
 # This is the module call
 module "aro_cluster" {
   source = "../../"
+  providers = {
+    azapi = azapi
+  }
 
   # API server configuration
   api_server_profile = {
@@ -217,6 +224,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
+
 - <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) (~> 3.8)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
@@ -274,9 +283,9 @@ Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.4.4
+Version: 0.2.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 

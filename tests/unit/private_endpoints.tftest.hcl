@@ -1,8 +1,9 @@
 mock_provider "azapi" {
   mock_data "azapi_client_config" {
     defaults = {
-      subscription_id = "00000000-0000-0000-0000-000000000000"
-      tenant_id       = "00000000-0000-0000-0000-000000000000"
+      subscription_id          = "00000000-0000-0000-0000-000000000000"
+      tenant_id                = "00000000-0000-0000-0000-000000000000"
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
     }
   }
   mock_data "azapi_resource_list" {
@@ -30,8 +31,6 @@ mock_provider "azurerm" {
     }
   }
 }
-
-mock_provider "modtm" {}
 
 mock_provider "random" {
   mock_resource "random_uuid" {
@@ -68,8 +67,8 @@ run "empty_defaults" {
   providers = {
     azapi   = azapi
     azurerm = azurerm
-    modtm   = modtm
-    random  = random
+
+    random = random
   }
   assert {
     condition = (
@@ -88,8 +87,8 @@ run "managed_dns_and_custom_ip_fields" {
   providers = {
     azapi   = azapi
     azurerm = azurerm
-    modtm   = modtm
-    random  = random
+
+    random = random
   }
   variables {
     private_endpoints = {
@@ -135,8 +134,8 @@ run "unmanaged_dns_extensions" {
   providers = {
     azapi   = azapi
     azurerm = azurerm
-    modtm   = modtm
-    random  = random
+
+    random = random
   }
   variables {
     private_endpoints_manage_dns_zone_group = false
@@ -214,8 +213,8 @@ run "managed_dns_optional_extension_names" {
   providers = {
     azapi   = azapi
     azurerm = azurerm
-    modtm   = modtm
-    random  = random
+
+    random = random
   }
   variables {
     private_endpoints = {
@@ -261,8 +260,8 @@ run "invalid_subnet" {
   providers = {
     azapi   = azapi
     azurerm = azurerm
-    modtm   = modtm
-    random  = random
+
+    random = random
   }
   variables {
     private_endpoints = { api = { subnet_resource_id = "invalid" } }

@@ -2,6 +2,7 @@ terraform {
   required_version = "~> 1.5"
 
   required_providers {
+    # tflint-ignore: terraform_unused_required_providers
     azapi = {
       source  = "Azure/azapi"
       version = "~> 2.12"
@@ -239,9 +240,6 @@ resource "azurerm_role_assignment" "rp_network_contributor" {
 # This is the module call
 module "aro_cluster" {
   source = "../../"
-  providers = {
-    azapi = azapi
-  }
 
   api_server_profile = {
     visibility = "Public"

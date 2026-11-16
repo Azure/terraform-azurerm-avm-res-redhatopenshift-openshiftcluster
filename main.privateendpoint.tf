@@ -81,7 +81,7 @@ resource "azurerm_private_endpoint_application_security_group_association" "this
 
 module "avm_interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.9.0"
+  version = "0.10.0"
 
   location                         = var.location
   enable_telemetry                 = var.enable_telemetry

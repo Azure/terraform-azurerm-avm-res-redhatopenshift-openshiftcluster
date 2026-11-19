@@ -2,7 +2,7 @@
 
 - Create a directory for each example.
 - Create a `_header.md` file in each directory to describe the example.
-- See the `default` example provided as a skeleton - this must remain, but you can add others.
+- See the `defaults` example provided as a skeleton - this must remain, but you can add others.
 - The `managed-identities` example showcases the Azure Red Hat OpenShift managed identity preview wiring with least-privilege role assignments.
 - Run `make fmt && make docs` from the repo root to generate the required documentation.
 
